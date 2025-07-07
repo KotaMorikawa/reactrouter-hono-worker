@@ -96,14 +96,62 @@ npm run dev
 
 ## 📝 開発コマンド
 
-### 基本コマンド
+### 基本コマンド（全パッケージ一斉実行）
 ```bash
-npm run dev          # 開発サーバー起動
-npm run build        # プロダクションビルド
-npm run test         # テスト実行
-npm run lint         # Linter実行
-npm run typecheck    # 型チェック
+npm run dev          # 開発サーバー起動（全サービス並列）
+npm run build        # プロダクションビルド（全パッケージ）
+npm run test         # テスト実行（全パッケージ）
+npm run lint         # Linter実行（全パッケージ）
+npm run typecheck    # 型チェック（全パッケージ）
+npm run clean        # ビルド成果物クリーン
 ```
+
+### Turborepoによる高度なコマンド実行
+
+#### 個別パッケージ実行
+```bash
+# 特定のパッケージのみ実行
+npx turbo build --filter=frontend
+npx turbo test --filter=backend
+npx turbo lint --filter=@repo/db
+npx turbo typecheck --filter=@repo/shared
+npx turbo dev --filter=jobs
+
+# 複数パッケージ指定
+npx turbo build --filter=backend --filter=@repo/shared
+npx turbo lint --filter=frontend --filter=backend
+```
+
+#### パッケージ依存関係の活用
+```bash
+# 特定パッケージとその依存関係
+npx turbo build --filter=frontend...
+
+# 特定パッケージに依存するパッケージ
+npx turbo test --filter=...@repo/shared
+
+# 変更されたファイルに関連するパッケージのみ
+npx turbo lint --filter=[HEAD^1]
+```
+
+#### キャッシュとパフォーマンス
+```bash
+# キャッシュ状態を確認
+npx turbo build --dry-run
+
+# 並列実行（最大パフォーマンス）
+npx turbo dev --parallel
+
+# キャッシュクリア
+npx turbo clean
+```
+
+### パッケージ構成
+- **apps/frontend**: React Router v7フロントエンド
+- **apps/backend**: Hono APIバックエンド
+- **apps/jobs**: Trigger.devバックグラウンドジョブ
+- **packages/db**: Drizzle ORM データベース層（`@repo/db`）
+- **packages/shared**: 共有型定義とZodスキーマ（`@repo/shared`）
 
 ### データベース操作
 ```bash
