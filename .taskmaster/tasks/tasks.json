@@ -1,0 +1,172 @@
+{
+  "master": {
+    "tasks": [
+      {
+        "id": 1,
+        "title": "Setup Monorepo Project Structure with Turborepo",
+        "description": "Initialize the monorepo structure with Turborepo, configure workspaces, and set up basic project configuration",
+        "details": "Create root package.json with turborepo configuration, set up apps/ and packages/ directories, configure npm workspaces, create basic tsconfig.json, and set up initial turbo.json with build, dev, lint, and test pipelines. Install turborepo and configure remote caching.",
+        "testStrategy": "Verify turborepo commands work correctly, test workspace resolution, and ensure build/dev scripts execute properly across all packages",
+        "priority": "high",
+        "dependencies": [],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 2,
+        "title": "Setup Database Layer with Drizzle ORM and PostgreSQL",
+        "description": "Configure PostgreSQL database with Drizzle ORM, create database schemas, and set up migrations",
+        "details": "Create packages/db with Drizzle ORM setup, define user authentication schemas (users, sessions, roles, permissions), configure Hyperdrive connection for Cloudflare Workers, create migration scripts, and set up database seeding for development. Include user roles (admin, editor, viewer, guest) and permission tables.",
+        "testStrategy": "Test database connection, verify schema creation, test migrations up/down, and validate seed data insertion",
+        "priority": "high",
+        "dependencies": [
+          1
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 3,
+        "title": "Setup Shared Types and Validation with Zod",
+        "description": "Create shared package for TypeScript types, Zod schemas, and common utilities",
+        "details": "Create packages/shared with TypeScript types for authentication, user management, and API contracts. Implement Zod schemas for request/response validation, user registration, login, and role-based permissions. Export common utilities and constants used across frontend and backend.",
+        "testStrategy": "Test Zod schema validation with valid/invalid inputs, verify type exports work correctly, and ensure schemas match database structure",
+        "priority": "medium",
+        "dependencies": [
+          1
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 4,
+        "title": "Implement Hono Backend API with Authentication",
+        "description": "Create Hono-based backend API with JWT authentication, session management, and security features",
+        "details": "Create apps/backend with Hono framework, implement JWT authentication with HTTPOnly cookies, create user registration/login endpoints, implement Argon2 password hashing, set up Workers KV for refresh token storage, implement rate limiting (5 failed attempts = 15min lock), and add CSRF protection with Double Submit Cookie pattern.",
+        "testStrategy": "Test authentication flows, verify JWT token creation/validation, test rate limiting functionality, and validate security headers implementation",
+        "priority": "high",
+        "dependencies": [
+          2,
+          3
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 5,
+        "title": "Implement Role-Based Access Control (RBAC)",
+        "description": "Create comprehensive RBAC system with roles, permissions, and middleware for authorization",
+        "details": "Implement middleware for role-based access control, create permission checking functions (resource.action format like 'posts.create'), implement role hierarchy (admin > editor > viewer > guest), add permission decorators for API routes, and create admin endpoints for user/role management.",
+        "testStrategy": "Test permission checks for different user roles, verify access control middleware works correctly, and test admin user management functions",
+        "priority": "high",
+        "dependencies": [
+          4
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 6,
+        "title": "Setup React Router v7 Frontend on Cloudflare Workers",
+        "description": "Create React Router v7 frontend application configured for Cloudflare Workers deployment",
+        "details": "Create apps/frontend with React Router v7, configure for Cloudflare Workers deployment, set up SSR capabilities, implement routing structure, create authentication pages (login, register, dashboard), and configure Vite for development with hot reload support.",
+        "testStrategy": "Test SSR rendering, verify routing works correctly, test page loading times, and ensure Workers compatibility",
+        "priority": "high",
+        "dependencies": [
+          1,
+          3
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 7,
+        "title": "Implement Type-Safe API Client with Hono RPC",
+        "description": "Create type-safe API client using Hono RPC for seamless frontend-backend communication",
+        "details": "Set up Hono RPC client in frontend, configure Service Bindings for production and HTTP for development, implement automatic type sharing from backend to frontend, create API hooks for authentication flows, and add error handling and retry logic.",
+        "testStrategy": "Test type safety between frontend and backend, verify Service Bindings work in production, and test API error handling",
+        "priority": "medium",
+        "dependencies": [
+          4,
+          6
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 8,
+        "title": "Implement Authentication UI and User Management",
+        "description": "Create comprehensive authentication UI with login, registration, and user management features",
+        "details": "Implement login/register forms with validation, create user dashboard, implement logout functionality, add password reset flow, create role-based navigation, implement session management with automatic token refresh, and add user profile management.",
+        "testStrategy": "Test authentication flows end-to-end, verify form validation, test session persistence, and validate role-based UI rendering",
+        "priority": "medium",
+        "dependencies": [
+          7
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 9,
+        "title": "Setup R2 File Storage Integration",
+        "description": "Integrate Cloudflare R2 for file storage with upload/download capabilities",
+        "details": "Configure R2 bucket, implement file upload endpoints in backend, create presigned URL generation, add file type validation and size limits, implement file deletion, and create frontend file upload components with progress indicators.",
+        "testStrategy": "Test file upload/download functionality, verify file type validation, test presigned URL generation, and validate file size limits",
+        "priority": "low",
+        "dependencies": [
+          4,
+          6
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 10,
+        "title": "Setup Trigger.dev Background Jobs",
+        "description": "Configure Trigger.dev for background job processing and scheduled tasks",
+        "details": "Create apps/jobs with Trigger.dev configuration, implement background jobs for email sending, user cleanup, session cleanup, and audit logging. Set up scheduled tasks for maintenance operations and create job monitoring/retry mechanisms.",
+        "testStrategy": "Test background job execution, verify scheduled tasks run correctly, test job retry mechanisms, and validate job monitoring capabilities",
+        "priority": "low",
+        "dependencies": [
+          2,
+          4
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 11,
+        "title": "Setup Development Environment and CI/CD Pipeline",
+        "description": "Configure development environment with Docker and implement CI/CD pipeline for automated testing and deployment",
+        "details": "Create Docker Compose setup for PostgreSQL and Redis, configure Wrangler for local development, set up GitHub Actions for CI/CD with preview/staging/production environments, implement automated testing with Vitest and Playwright, add code quality checks with Biome, and configure automated deployment to Cloudflare Workers.",
+        "testStrategy": "Test Docker environment setup, verify CI/CD pipeline execution, test automated deployments, and validate code quality checks",
+        "priority": "medium",
+        "dependencies": [
+          1,
+          2
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 12,
+        "title": "Implement Security Features and Monitoring",
+        "description": "Add comprehensive security features including WAF, rate limiting, and monitoring capabilities",
+        "details": "Configure Cloudflare WAF rules, implement bot protection with Turnstile, set up KV-based rate limiting, add security headers middleware, implement audit logging, configure Sentry for error tracking, set up Cloudflare Analytics, and create alerting for security events.",
+        "testStrategy": "Test security features including rate limiting, verify WAF protection, test error tracking, and validate monitoring alerts",
+        "priority": "medium",
+        "dependencies": [
+          4,
+          8
+        ],
+        "status": "pending",
+        "subtasks": []
+      }
+    ],
+    "metadata": {
+      "created": "2025-07-07T02:18:44.200Z",
+      "updated": "2025-07-07T02:18:44.200Z",
+      "description": "Tasks for master context"
+    }
+  }
+}

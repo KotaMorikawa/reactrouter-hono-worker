@@ -1,0 +1,195 @@
+# 製品要求仕様書 (PRD)
+## モノレポ認証アプリケーション
+
+### 1. 製品概要
+
+#### 製品名
+モノレポ認証アプリケーション
+
+#### 製品ビジョン
+Cloudflare Workers上で動作するモダンな認証システムを備えたモノレポアプリケーション。スケーラブルで高性能、開発者体験に優れたアーキテクチャを提供する。
+
+#### 対象ユーザー
+- 開発者・エンジニア
+- SaaS製品開発チーム
+- モダンなWebアプリケーションを構築する組織
+
+### 2. 技術仕様
+
+#### 2.1 アーキテクチャ
+- **モノレポ管理**: Turborepo
+- **フロントエンド**: React Router v7 on Cloudflare Workers
+- **バックエンド**: Hono + Hono RPC on Cloudflare Workers
+- **バックグラウンド処理**: Trigger.dev
+- **データベース**: PostgreSQL via Hyperdrive
+- **キャッシュ**: Workers KV
+- **ファイルストレージ**: R2
+
+#### 2.2 ディレクトリ構成
+```
+apps/
+  frontend/     # React Router v7 (Workers)
+  backend/      # Hono API (Workers)
+  jobs/         # Trigger.dev バックグラウンドジョブ
+packages/
+  db/          # Drizzle schema & migrations
+  shared/      # 共有型定義、Zodスキーマ
+```
+
+### 3. 機能要求
+
+#### 3.1 認証機能
+- **ユーザー登録・ログイン**: メールアドレス + パスワード
+- **JWT認証**: HTTPOnly Cookie + Secure + SameSite
+- **トークン管理**: 
+  - Access Token: 15分
+  - Refresh Token: 7日（KV保存）
+- **セキュリティ機能**:
+  - パスワードハッシュ化（Argon2）
+  - CSRF対策（Double Submit Cookie）
+  - ログイン試行制限（5回失敗で15分ロック）
+
+#### 3.2 認可機能
+- **ロールベースアクセス制御**:
+  - admin: 全権限
+  - editor: 編集権限
+  - viewer: 閲覧権限
+  - guest: 限定アクセス
+- **権限管理**: リソース×アクション単位（例: `posts.create`, `users.delete`）
+
+#### 3.3 API機能
+- **型安全なAPI**: Hono RPC
+- **自動型共有**: バックエンド→フロントエンド
+- **バリデーション**: Zodスキーマ
+- **Service Bindings**: Workers間高速通信
+
+#### 3.4 データ管理
+- **ORM**: Drizzle ORM
+- **マイグレーション**: 自動化
+- **セッション管理**: KV保存
+- **ファイルアップロード**: R2統合
+
+### 4. 非機能要求
+
+#### 4.1 パフォーマンス目標
+- **TTFB**: 50ms以内（エッジ）
+- **API応答**: 10ms以内（Service Binding）
+- **SSR**: 100ms以内
+- **可用性**: 99.9%
+
+#### 4.2 セキュリティ要求
+- **DDoS対策**: Cloudflare標準機能
+- **WAF**: Cloudflare WAF Rules
+- **Bot対策**: Turnstile
+- **Rate Limiting**: KVベース実装
+- **入力検証**: Zodによる厳密な型チェック
+- **セキュリティヘッダー**: Honoミドルウェア
+
+#### 4.3 開発者体験
+- **ホットリロード**: Vite、Wrangler対応
+- **型安全性**: TypeScript strict mode
+- **統一スクリプト**: 一貫した開発コマンド
+- **並列実行**: Turborepoによる高速化
+
+### 5. 環境・インフラ要求
+
+#### 5.1 開発環境
+- **コンテナ**: Docker (PostgreSQL + Redis)
+- **ローカルサーバー**: 
+  - Frontend: Vite (port 3000)
+  - Backend: Wrangler (port 8787)
+
+#### 5.2 本番環境
+- **ランタイム**: Cloudflare Workers
+- **データベース**: PostgreSQL (Neon/Supabase) via Hyperdrive
+- **ストレージ**: Workers KV, R2
+- **通信**: Service Bindings
+
+#### 5.3 CI/CD要求
+- **ブランチ戦略**:
+  - main → production
+  - develop → staging
+  - feature/* → preview
+- **デプロイフロー**:
+  - PR作成時: プレビュー環境自動作成・破棄
+  - develop: ステージング自動デプロイ
+  - main: 本番デプロイ（承認フロー付き）
+
+### 6. 品質管理要求
+
+#### 6.1 テスト要求
+- **単体テスト**: Vitest
+- **E2Eテスト**: Playwright
+- **カバレッジ**: 自動レポート
+- **自動テスト**: PR作成時実行
+
+#### 6.2 コード品質
+- **Linter/Formatter**: Biome
+- **型チェック**: TypeScript strict mode
+- **Git hooks**: コミット時品質チェック
+
+#### 6.3 監視・運用
+- **APM**: Cloudflare Analytics
+- **エラー追跡**: Sentry
+- **ログ**: Cloudflare Logpush
+- **アラート**: PagerDuty/Slack
+
+### 7. 開発フロー
+
+#### 7.1 開発効率化
+- **モノレポ統合管理**: 単一リポジトリで全コンポーネント管理
+- **型定義自動共有**: Hono RPC
+- **依存関係一元管理**: npm workspaces
+- **共通設定統一**: Biome、TypeScript
+
+#### 7.2 インテリジェントビルド
+- **変更影響範囲検出**: Turborepo
+- **増分ビルド**: リモートキャッシュ活用
+- **不要作業スキップ**: 自動判定
+- **並列実行**: 高速化
+
+#### 7.3 安全デプロイ
+- **Blue-Greenデプロイ**: 無停止更新
+- **ヘルスチェック**: 自動実行
+- **異常検知**: 自動ロールバック
+- **DBマイグレーション**: 自動バックアップ
+
+### 8. 成功指標
+
+#### 8.1 技術指標
+- ページ読み込み時間: 1秒以内
+- API応答時間: 50ms以内
+- エラー率: 0.1%未満
+- 可用性: 99.9%以上
+
+#### 8.2 開発効率指標
+- ビルド時間: 3分以内
+- デプロイ時間: 5分以内
+- 開発サーバー起動: 30秒以内
+- テスト実行時間: 2分以内
+
+### 9. 制約事項
+
+#### 9.1 技術制約
+- Cloudflare Workers環境の制限に準拠
+- PostgreSQL互換性の維持
+- ブラウザ対応: モダンブラウザのみ
+
+#### 9.2 運用制約
+- メンテナンス時間: 月1回、深夜時間帯
+- データバックアップ: 日次実行
+- セキュリティ監査: 四半期1回
+
+### 10. 今後の拡張予定
+
+#### 10.1 機能拡張
+- OAuth2.0対応（Google、GitHub等）
+- 多要素認証（MFA）
+- 監査ログ機能
+- 権限管理画面
+
+#### 10.2 技術拡張
+- GraphQL API対応
+- WebSocket対応
+- 国際化（i18n）
+- PWA対応
