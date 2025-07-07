@@ -27,3 +27,12 @@ node_modules/
 # Task files
 # tasks.json
 # tasks/ 
+
+# Turborepo
+.turbo/
+dist/
+build/
+.wrangler/
+
+# Build outputs
+*.tsbuildinfo
