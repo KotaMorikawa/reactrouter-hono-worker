@@ -36,3 +36,31 @@ build/
 
 # Build outputs
 *.tsbuildinfo
+
+# React Router
+.react-router/
+
+# Testing
+coverage/
+test-results/
+
+# Task Master
+.taskmaster/
+
+# Claude Code
+.claude/
+
+# Source maps
+*.map
+
+# Temporary files
+*.tmp
+*.temp
+
+# Environment variables (additional)
+.env*
+.dev.vars
+
+# Documentation (task-specific)
+prd.txt
+requirement.md

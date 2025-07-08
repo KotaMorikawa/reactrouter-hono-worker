@@ -1,22 +1,21 @@
 {
-  "name": "backend",
-  "scripts": {
-    "build": "tsc && wrangler deploy --dry-run",
-    "dev": "wrangler dev",
-    "deploy": "wrangler deploy --minify",
-    "cf-typegen": "wrangler types --env-interface CloudflareBindings",
-    "lint": "biome check src/",
-    "test": "vitest run",
-    "typecheck": "tsc --noEmit"
-  },
-  "dependencies": {
-    "hono": "^4.8.4"
-  },
-  "devDependencies": {
-    "wrangler": "^4.4.0",
-    "typescript": "^5.8.3",
-    "@biomejs/biome": "^1.8.0",
-    "vitest": "^1.6.0",
-    "@types/node": "^20.0.0"
-  }
+	"name": "backend",
+	"scripts": {
+		"build": "tsc && wrangler deploy --dry-run",
+		"dev": "wrangler dev",
+		"deploy": "wrangler deploy --minify",
+		"cf-typegen": "wrangler types --env-interface CloudflareBindings",
+		"lint": "biome check src/",
+		"test": "vitest run",
+		"typecheck": "tsc --noEmit"
+	},
+	"dependencies": {
+		"hono": "^4.8.4"
+	},
+	"devDependencies": {
+		"@types/node": "^20.0.0",
+		"typescript": "^5.8.3",
+		"vitest": "^1.6.0",
+		"wrangler": "^4.4.0"
+	}
 }
