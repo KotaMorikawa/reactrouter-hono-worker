@@ -1,189 +1,336 @@
 {
-	"master": {
-		"tasks": [
-			{
-				"id": 1,
-				"title": "Setup Monorepo Project Structure with Turborepo",
-				"description": "Initialize the monorepo structure with Turborepo, configure workspaces, and set up basic project configuration",
-				"details": "Create root package.json with turborepo configuration, set up apps/ and packages/ directories, configure npm workspaces, create basic tsconfig.json, and set up initial turbo.json with build, dev, lint, and test pipelines. Install turborepo and configure remote caching.",
-				"testStrategy": "Verify turborepo commands work correctly, test workspace resolution, and ensure build/dev scripts execute properly across all packages",
-				"priority": "high",
-				"dependencies": [],
-				"status": "done",
-				"subtasks": [
-					{
-						"id": 1,
-						"title": "Initialize root package.json with Turborepo configuration",
-						"description": "Set up the root package.json file with turborepo dependency and npm workspaces configuration",
-						"dependencies": [],
-						"details": "Create package.json with name, version, private: true, workspaces array pointing to 'apps/*' and 'packages/*', devDependencies including turbo, and scripts for turbo commands (build, dev, lint, test). Install turborepo globally or as dev dependency.",
-						"status": "done",
-						"testStrategy": "Verify package.json structure and ensure npm install works without errors"
-					},
-					{
-						"id": 2,
-						"title": "Create directory structure and workspace folders",
-						"description": "Set up the monorepo directory structure with apps/ and packages/ folders and initial placeholder projects",
-						"dependencies": [1],
-						"details": "Create apps/ directory for applications (frontend, backend, jobs), packages/ directory for shared packages (db, shared), and add basic package.json files in each workspace with appropriate names and dependencies.",
-						"status": "done",
-						"testStrategy": "Check that all directories exist and workspace detection works with npm ls --workspaces"
-					},
-					{
-						"id": 3,
-						"title": "Configure TypeScript root configuration",
-						"description": "Set up the root tsconfig.json with shared TypeScript configuration for all workspaces",
-						"dependencies": [2],
-						"details": "Create tsconfig.json with strict mode enabled, modern target (ES2022), module resolution settings, path mapping for workspace packages, and base configuration that can be extended by individual workspaces. Include composite: true for project references.",
-						"status": "done",
-						"testStrategy": "Verify TypeScript configuration is valid and can be extended by workspace tsconfig files"
-					},
-					{
-						"id": 4,
-						"title": "Set up turbo.json pipeline configuration",
-						"description": "Configure Turborepo pipeline with build, dev, lint, and test tasks including proper dependency chains",
-						"dependencies": [3],
-						"details": "Create turbo.json with pipeline definitions for build (depends on dependencies' build), dev (cache: false), lint (no dependencies), and test (depends on build). Configure appropriate outputs, inputs, and cache settings for each task. Set up task dependencies and parallel execution where appropriate.",
-						"status": "done",
-						"testStrategy": "Run turbo build --dry-run and turbo dev --dry-run to verify pipeline configuration"
-					},
-					{
-						"id": 5,
-						"title": "Configure remote caching and verify setup",
-						"description": "Set up Turborepo remote caching configuration and verify the entire monorepo setup works correctly",
-						"dependencies": [4],
-						"details": "Configure remote caching in turbo.json (either Vercel remote cache or local cache), add .turbo to .gitignore, create basic .gitignore for the monorepo, and run initial turbo commands to verify everything works. Test that cache is working properly.",
-						"status": "done",
-						"testStrategy": "Run full turbo build and turbo test cycles, verify caching works by running commands twice and checking for cache hits"
-					}
-				]
-			},
-			{
-				"id": 2,
-				"title": "Setup Database Layer with Drizzle ORM and PostgreSQL",
-				"description": "Configure PostgreSQL database with Drizzle ORM, create database schemas, and set up migrations",
-				"details": "Create packages/db with Drizzle ORM setup, define user authentication schemas (users, sessions, roles, permissions), configure Hyperdrive connection for Cloudflare Workers, create migration scripts, and set up database seeding for development. Include user roles (admin, editor, viewer, guest) and permission tables.",
-				"testStrategy": "Test database connection, verify schema creation, test migrations up/down, and validate seed data insertion",
-				"priority": "high",
-				"dependencies": [1],
-				"status": "pending",
-				"subtasks": []
-			},
-			{
-				"id": 3,
-				"title": "Setup Shared Types and Validation with Zod",
-				"description": "Create shared package for TypeScript types, Zod schemas, and common utilities",
-				"details": "Create packages/shared with TypeScript types for authentication, user management, and API contracts. Implement Zod schemas for request/response validation, user registration, login, and role-based permissions. Export common utilities and constants used across frontend and backend.",
-				"testStrategy": "Test Zod schema validation with valid/invalid inputs, verify type exports work correctly, and ensure schemas match database structure",
-				"priority": "medium",
-				"dependencies": [1],
-				"status": "pending",
-				"subtasks": []
-			},
-			{
-				"id": 4,
-				"title": "Implement Hono Backend API with Authentication",
-				"description": "Create Hono-based backend API with JWT authentication, session management, and security features",
-				"details": "Create apps/backend with Hono framework, implement JWT authentication with HTTPOnly cookies, create user registration/login endpoints, implement Argon2 password hashing, set up Workers KV for refresh token storage, implement rate limiting (5 failed attempts = 15min lock), and add CSRF protection with Double Submit Cookie pattern.",
-				"testStrategy": "Test authentication flows, verify JWT token creation/validation, test rate limiting functionality, and validate security headers implementation",
-				"priority": "high",
-				"dependencies": [2, 3],
-				"status": "pending",
-				"subtasks": []
-			},
-			{
-				"id": 5,
-				"title": "Implement Role-Based Access Control (RBAC)",
-				"description": "Create comprehensive RBAC system with roles, permissions, and middleware for authorization",
-				"details": "Implement middleware for role-based access control, create permission checking functions (resource.action format like 'posts.create'), implement role hierarchy (admin > editor > viewer > guest), add permission decorators for API routes, and create admin endpoints for user/role management.",
-				"testStrategy": "Test permission checks for different user roles, verify access control middleware works correctly, and test admin user management functions",
-				"priority": "high",
-				"dependencies": [4],
-				"status": "pending",
-				"subtasks": []
-			},
-			{
-				"id": 6,
-				"title": "Setup React Router v7 Frontend on Cloudflare Workers",
-				"description": "Create React Router v7 frontend application configured for Cloudflare Workers deployment",
-				"details": "Create apps/frontend with React Router v7, configure for Cloudflare Workers deployment, set up SSR capabilities, implement routing structure, create authentication pages (login, register, dashboard), and configure Vite for development with hot reload support.",
-				"testStrategy": "Test SSR rendering, verify routing works correctly, test page loading times, and ensure Workers compatibility",
-				"priority": "high",
-				"dependencies": [1, 3],
-				"status": "pending",
-				"subtasks": []
-			},
-			{
-				"id": 7,
-				"title": "Implement Type-Safe API Client with Hono RPC",
-				"description": "Create type-safe API client using Hono RPC for seamless frontend-backend communication",
-				"details": "Set up Hono RPC client in frontend, configure Service Bindings for production and HTTP for development, implement automatic type sharing from backend to frontend, create API hooks for authentication flows, and add error handling and retry logic.",
-				"testStrategy": "Test type safety between frontend and backend, verify Service Bindings work in production, and test API error handling",
-				"priority": "medium",
-				"dependencies": [4, 6],
-				"status": "pending",
-				"subtasks": []
-			},
-			{
-				"id": 8,
-				"title": "Implement Authentication UI and User Management",
-				"description": "Create comprehensive authentication UI with login, registration, and user management features",
-				"details": "Implement login/register forms with validation, create user dashboard, implement logout functionality, add password reset flow, create role-based navigation, implement session management with automatic token refresh, and add user profile management.",
-				"testStrategy": "Test authentication flows end-to-end, verify form validation, test session persistence, and validate role-based UI rendering",
-				"priority": "medium",
-				"dependencies": [7],
-				"status": "pending",
-				"subtasks": []
-			},
-			{
-				"id": 9,
-				"title": "Setup R2 File Storage Integration",
-				"description": "Integrate Cloudflare R2 for file storage with upload/download capabilities",
-				"details": "Configure R2 bucket, implement file upload endpoints in backend, create presigned URL generation, add file type validation and size limits, implement file deletion, and create frontend file upload components with progress indicators.",
-				"testStrategy": "Test file upload/download functionality, verify file type validation, test presigned URL generation, and validate file size limits",
-				"priority": "low",
-				"dependencies": [4, 6],
-				"status": "pending",
-				"subtasks": []
-			},
-			{
-				"id": 10,
-				"title": "Setup Trigger.dev Background Jobs",
-				"description": "Configure Trigger.dev for background job processing and scheduled tasks",
-				"details": "Create apps/jobs with Trigger.dev configuration, implement background jobs for email sending, user cleanup, session cleanup, and audit logging. Set up scheduled tasks for maintenance operations and create job monitoring/retry mechanisms.",
-				"testStrategy": "Test background job execution, verify scheduled tasks run correctly, test job retry mechanisms, and validate job monitoring capabilities",
-				"priority": "low",
-				"dependencies": [2, 4],
-				"status": "pending",
-				"subtasks": []
-			},
-			{
-				"id": 11,
-				"title": "Setup Development Environment and CI/CD Pipeline",
-				"description": "Configure development environment with Docker and implement CI/CD pipeline for automated testing and deployment",
-				"details": "Create Docker Compose setup for PostgreSQL and Redis, configure Wrangler for local development, set up GitHub Actions for CI/CD with preview/staging/production environments, implement automated testing with Vitest and Playwright, add code quality checks with Biome, and configure automated deployment to Cloudflare Workers.",
-				"testStrategy": "Test Docker environment setup, verify CI/CD pipeline execution, test automated deployments, and validate code quality checks",
-				"priority": "medium",
-				"dependencies": [1, 2],
-				"status": "pending",
-				"subtasks": []
-			},
-			{
-				"id": 12,
-				"title": "Implement Security Features and Monitoring",
-				"description": "Add comprehensive security features including WAF, rate limiting, and monitoring capabilities",
-				"details": "Configure Cloudflare WAF rules, implement bot protection with Turnstile, set up KV-based rate limiting, add security headers middleware, implement audit logging, configure Sentry for error tracking, set up Cloudflare Analytics, and create alerting for security events.",
-				"testStrategy": "Test security features including rate limiting, verify WAF protection, test error tracking, and validate monitoring alerts",
-				"priority": "medium",
-				"dependencies": [4, 8],
-				"status": "pending",
-				"subtasks": []
-			}
-		],
-		"metadata": {
-			"created": "2025-07-07T02:18:44.200Z",
-			"updated": "2025-07-07T03:25:20.080Z",
-			"description": "Tasks for master context"
-		}
-	}
+  "master": {
+    "tasks": [
+      {
+        "id": 1,
+        "title": "Setup Monorepo Project Structure with Turborepo",
+        "description": "Initialize the monorepo structure with Turborepo, configure workspaces, and set up basic project configuration",
+        "details": "Create root package.json with turborepo configuration, set up apps/ and packages/ directories, configure npm workspaces, create basic tsconfig.json, and set up initial turbo.json with build, dev, lint, and test pipelines. Install turborepo and configure remote caching.",
+        "testStrategy": "Verify turborepo commands work correctly, test workspace resolution, and ensure build/dev scripts execute properly across all packages",
+        "priority": "high",
+        "dependencies": [],
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Initialize root package.json with Turborepo configuration",
+            "description": "Set up the root package.json file with turborepo dependency and npm workspaces configuration",
+            "dependencies": [],
+            "details": "Create package.json with name, version, private: true, workspaces array pointing to 'apps/*' and 'packages/*', devDependencies including turbo, and scripts for turbo commands (build, dev, lint, test). Install turborepo globally or as dev dependency.",
+            "status": "done",
+            "testStrategy": "Verify package.json structure and ensure npm install works without errors"
+          },
+          {
+            "id": 2,
+            "title": "Create directory structure and workspace folders",
+            "description": "Set up the monorepo directory structure with apps/ and packages/ folders and initial placeholder projects",
+            "dependencies": [
+              1
+            ],
+            "details": "Create apps/ directory for applications (frontend, backend, jobs), packages/ directory for shared packages (db, shared), and add basic package.json files in each workspace with appropriate names and dependencies.",
+            "status": "done",
+            "testStrategy": "Check that all directories exist and workspace detection works with npm ls --workspaces"
+          },
+          {
+            "id": 3,
+            "title": "Configure TypeScript root configuration",
+            "description": "Set up the root tsconfig.json with shared TypeScript configuration for all workspaces",
+            "dependencies": [
+              2
+            ],
+            "details": "Create tsconfig.json with strict mode enabled, modern target (ES2022), module resolution settings, path mapping for workspace packages, and base configuration that can be extended by individual workspaces. Include composite: true for project references.",
+            "status": "done",
+            "testStrategy": "Verify TypeScript configuration is valid and can be extended by workspace tsconfig files"
+          },
+          {
+            "id": 4,
+            "title": "Set up turbo.json pipeline configuration",
+            "description": "Configure Turborepo pipeline with build, dev, lint, and test tasks including proper dependency chains",
+            "dependencies": [
+              3
+            ],
+            "details": "Create turbo.json with pipeline definitions for build (depends on dependencies' build), dev (cache: false), lint (no dependencies), and test (depends on build). Configure appropriate outputs, inputs, and cache settings for each task. Set up task dependencies and parallel execution where appropriate.",
+            "status": "done",
+            "testStrategy": "Run turbo build --dry-run and turbo dev --dry-run to verify pipeline configuration"
+          },
+          {
+            "id": 5,
+            "title": "Configure remote caching and verify setup",
+            "description": "Set up Turborepo remote caching configuration and verify the entire monorepo setup works correctly",
+            "dependencies": [
+              4
+            ],
+            "details": "Configure remote caching in turbo.json (either Vercel remote cache or local cache), add .turbo to .gitignore, create basic .gitignore for the monorepo, and run initial turbo commands to verify everything works. Test that cache is working properly.",
+            "status": "done",
+            "testStrategy": "Run full turbo build and turbo test cycles, verify caching works by running commands twice and checking for cache hits"
+          }
+        ]
+      },
+      {
+        "id": 2,
+        "title": "Setup Database Layer with Drizzle ORM and PostgreSQL",
+        "description": "Configure PostgreSQL database with Drizzle ORM, create database schemas, and set up migrations",
+        "details": "Create packages/db with Drizzle ORM setup, define user authentication schemas (users, sessions, roles, permissions), configure Hyperdrive connection for Cloudflare Workers, create migration scripts, and set up database seeding for development. Include user roles (admin, editor, viewer, guest) and permission tables.",
+        "testStrategy": "Test database connection, verify schema creation, test migrations up/down, and validate seed data insertion",
+        "priority": "high",
+        "dependencies": [
+          1
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Initialize Drizzle ORM Package Structure",
+            "description": "Set up the packages/db directory with Drizzle ORM configuration, database connection utilities, and TypeScript setup",
+            "dependencies": [],
+            "details": "Create packages/db directory with package.json, tsconfig.json, and drizzle.config.ts. Install drizzle-orm, drizzle-kit, and @types/pg dependencies. Set up database connection utility using Hyperdrive for Cloudflare Workers environment. Configure environment variables for database URL and connection settings. Create src/index.ts as the main export file.",
+            "status": "pending",
+            "testStrategy": "Unit tests for database connection utility and configuration validation"
+          },
+          {
+            "id": 2,
+            "title": "Define Core Authentication Database Schemas",
+            "description": "Create Drizzle schemas for users, sessions, roles, and permissions tables with proper relationships",
+            "dependencies": [
+              1
+            ],
+            "details": "Define user schema with id, email, password_hash, created_at, updated_at fields. Create sessions table with session_id, user_id, expires_at, and metadata. Define roles table (admin, editor, viewer, guest) and permissions table with resource-action structure. Set up proper foreign key relationships and indexes. Use Drizzle's pgTable and relationship definitions.",
+            "status": "pending",
+            "testStrategy": "Schema validation tests and relationship integrity checks"
+          },
+          {
+            "id": 3,
+            "title": "Configure Database Connection for Cloudflare Workers",
+            "description": "Set up Hyperdrive connection configuration specifically for Cloudflare Workers environment",
+            "dependencies": [
+              1
+            ],
+            "details": "Configure Hyperdrive connection using Cloudflare Workers bindings. Set up connection pooling and timeout configurations. Create database client factory that works with Workers runtime. Handle connection retry logic and error handling. Set up different connection configurations for development (direct PostgreSQL) and production (Hyperdrive).",
+            "status": "pending",
+            "testStrategy": "Connection pooling tests and Workers runtime compatibility tests"
+          },
+          {
+            "id": 4,
+            "title": "Create Migration System and Scripts",
+            "description": "Set up Drizzle migration system with initial migration files and migration runner",
+            "dependencies": [
+              2,
+              3
+            ],
+            "details": "Configure drizzle-kit for migration generation. Create initial migration files for users, sessions, roles, and permissions tables. Set up migration runner that works with Cloudflare Workers. Create npm scripts for generating and running migrations. Handle migration rollback capabilities and version tracking.",
+            "status": "pending",
+            "testStrategy": "Migration execution tests and rollback verification"
+          },
+          {
+            "id": 5,
+            "title": "Implement Database Seeding for Development",
+            "description": "Create seed scripts to populate development database with initial data including default roles and test users",
+            "dependencies": [
+              4
+            ],
+            "details": "Create seed files for default roles (admin, editor, viewer, guest) with appropriate permissions. Generate test users with different role assignments. Set up seed runner script that can be executed via npm command. Include data for testing authentication flows and permission checks. Make seeds idempotent to avoid duplicate data on multiple runs.",
+            "status": "pending",
+            "testStrategy": "Seed data validation tests and idempotency verification"
+          }
+        ]
+      },
+      {
+        "id": 3,
+        "title": "Setup Shared Types and Validation with Zod",
+        "description": "Create shared package for TypeScript types, Zod schemas, and common utilities",
+        "details": "Create packages/shared with TypeScript types for authentication, user management, and API contracts. Implement Zod schemas for request/response validation, user registration, login, and role-based permissions. Export common utilities and constants used across frontend and backend.",
+        "testStrategy": "Test Zod schema validation with valid/invalid inputs, verify type exports work correctly, and ensure schemas match database structure",
+        "priority": "medium",
+        "dependencies": [
+          1
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Initialize Shared Package Structure",
+            "description": "Create the packages/shared directory with proper TypeScript configuration, package.json, and build setup",
+            "dependencies": [],
+            "details": "Create packages/shared directory with package.json containing name '@repo/shared', TypeScript configuration with strict mode, and build scripts. Set up proper exports in package.json for types, schemas, and utilities. Configure Turborepo to include this package in the build pipeline.",
+            "status": "pending",
+            "testStrategy": "Verify package can be imported by other packages and TypeScript compilation works correctly"
+          },
+          {
+            "id": 2,
+            "title": "Define Core TypeScript Types",
+            "description": "Create TypeScript type definitions for authentication, user management, and API contracts",
+            "dependencies": [
+              1
+            ],
+            "details": "Create types/index.ts with User, Role, Permission interfaces. Define authentication types like LoginRequest, RegisterRequest, TokenPayload, and AuthSession. Create API contract types for request/response structures. Include role-based permission types (admin, editor, viewer, guest) and resource-action combinations.",
+            "status": "pending",
+            "testStrategy": "Create type tests to ensure proper interface contracts and type safety"
+          },
+          {
+            "id": 3,
+            "title": "Implement Zod Validation Schemas",
+            "description": "Create Zod schemas for request/response validation matching the TypeScript types",
+            "dependencies": [
+              2
+            ],
+            "details": "Create schemas/index.ts with Zod schemas for user registration (email, password, role), login validation, and API request/response validation. Implement schema validation for role-based permissions and ensure schemas align with TypeScript types. Include proper error messages and validation rules.",
+            "status": "pending",
+            "testStrategy": "Unit tests for schema validation with valid/invalid inputs and edge cases"
+          },
+          {
+            "id": 4,
+            "title": "Create Common Utilities and Constants",
+            "description": "Implement shared utilities, constants, and helper functions used across frontend and backend",
+            "dependencies": [
+              2
+            ],
+            "details": "Create utils/index.ts with common utilities like password validation helpers, JWT token utilities, role permission checking functions, and API response formatters. Define constants for roles, permissions, token expiration times, and API endpoints. Include type-safe utility functions for authentication and authorization.",
+            "status": "pending",
+            "testStrategy": "Unit tests for utility functions with various input scenarios and edge cases"
+          },
+          {
+            "id": 5,
+            "title": "Export Package APIs and Update Dependencies",
+            "description": "Configure proper exports and update other packages to use the shared types and schemas",
+            "dependencies": [
+              3,
+              4
+            ],
+            "details": "Update packages/shared/index.ts to export all types, schemas, and utilities with proper module structure. Update package.json exports field for optimal tree-shaking. Modify apps/frontend and apps/backend package.json to depend on '@repo/shared' and update import statements to use shared types instead of duplicated definitions.",
+            "status": "pending",
+            "testStrategy": "Integration tests to verify imports work correctly across packages and no circular dependencies exist"
+          }
+        ]
+      },
+      {
+        "id": 4,
+        "title": "Implement Hono Backend API with Authentication",
+        "description": "Create Hono-based backend API with JWT authentication, session management, and security features",
+        "details": "Create apps/backend with Hono framework, implement JWT authentication with HTTPOnly cookies, create user registration/login endpoints, implement Argon2 password hashing, set up Workers KV for refresh token storage, implement rate limiting (5 failed attempts = 15min lock), and add CSRF protection with Double Submit Cookie pattern.",
+        "testStrategy": "Test authentication flows, verify JWT token creation/validation, test rate limiting functionality, and validate security headers implementation",
+        "priority": "high",
+        "dependencies": [
+          2,
+          3
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 5,
+        "title": "Implement Role-Based Access Control (RBAC)",
+        "description": "Create comprehensive RBAC system with roles, permissions, and middleware for authorization",
+        "details": "Implement middleware for role-based access control, create permission checking functions (resource.action format like 'posts.create'), implement role hierarchy (admin > editor > viewer > guest), add permission decorators for API routes, and create admin endpoints for user/role management.",
+        "testStrategy": "Test permission checks for different user roles, verify access control middleware works correctly, and test admin user management functions",
+        "priority": "high",
+        "dependencies": [
+          4
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 6,
+        "title": "Setup React Router v7 Frontend on Cloudflare Workers",
+        "description": "Create React Router v7 frontend application configured for Cloudflare Workers deployment",
+        "details": "Create apps/frontend with React Router v7, configure for Cloudflare Workers deployment, set up SSR capabilities, implement routing structure, create authentication pages (login, register, dashboard), and configure Vite for development with hot reload support.",
+        "testStrategy": "Test SSR rendering, verify routing works correctly, test page loading times, and ensure Workers compatibility",
+        "priority": "high",
+        "dependencies": [
+          1,
+          3
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 7,
+        "title": "Implement Type-Safe API Client with Hono RPC",
+        "description": "Create type-safe API client using Hono RPC for seamless frontend-backend communication",
+        "details": "Set up Hono RPC client in frontend, configure Service Bindings for production and HTTP for development, implement automatic type sharing from backend to frontend, create API hooks for authentication flows, and add error handling and retry logic.",
+        "testStrategy": "Test type safety between frontend and backend, verify Service Bindings work in production, and test API error handling",
+        "priority": "medium",
+        "dependencies": [
+          4,
+          6
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 8,
+        "title": "Implement Authentication UI and User Management",
+        "description": "Create comprehensive authentication UI with login, registration, and user management features",
+        "details": "Implement login/register forms with validation, create user dashboard, implement logout functionality, add password reset flow, create role-based navigation, implement session management with automatic token refresh, and add user profile management.",
+        "testStrategy": "Test authentication flows end-to-end, verify form validation, test session persistence, and validate role-based UI rendering",
+        "priority": "medium",
+        "dependencies": [
+          7
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 9,
+        "title": "Setup R2 File Storage Integration",
+        "description": "Integrate Cloudflare R2 for file storage with upload/download capabilities",
+        "details": "Configure R2 bucket, implement file upload endpoints in backend, create presigned URL generation, add file type validation and size limits, implement file deletion, and create frontend file upload components with progress indicators.",
+        "testStrategy": "Test file upload/download functionality, verify file type validation, test presigned URL generation, and validate file size limits",
+        "priority": "low",
+        "dependencies": [
+          4,
+          6
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 10,
+        "title": "Setup Trigger.dev Background Jobs",
+        "description": "Configure Trigger.dev for background job processing and scheduled tasks",
+        "details": "Create apps/jobs with Trigger.dev configuration, implement background jobs for email sending, user cleanup, session cleanup, and audit logging. Set up scheduled tasks for maintenance operations and create job monitoring/retry mechanisms.",
+        "testStrategy": "Test background job execution, verify scheduled tasks run correctly, test job retry mechanisms, and validate job monitoring capabilities",
+        "priority": "low",
+        "dependencies": [
+          2,
+          4
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 11,
+        "title": "Setup Development Environment and CI/CD Pipeline",
+        "description": "Configure development environment with Docker and implement CI/CD pipeline for automated testing and deployment",
+        "details": "Create Docker Compose setup for PostgreSQL and Redis, configure Wrangler for local development, set up GitHub Actions for CI/CD with preview/staging/production environments, implement automated testing with Vitest and Playwright, add code quality checks with Biome, and configure automated deployment to Cloudflare Workers.",
+        "testStrategy": "Test Docker environment setup, verify CI/CD pipeline execution, test automated deployments, and validate code quality checks",
+        "priority": "medium",
+        "dependencies": [
+          1,
+          2
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 12,
+        "title": "Implement Security Features and Monitoring",
+        "description": "Add comprehensive security features including WAF, rate limiting, and monitoring capabilities",
+        "details": "Configure Cloudflare WAF rules, implement bot protection with Turnstile, set up KV-based rate limiting, add security headers middleware, implement audit logging, configure Sentry for error tracking, set up Cloudflare Analytics, and create alerting for security events.",
+        "testStrategy": "Test security features including rate limiting, verify WAF protection, test error tracking, and validate monitoring alerts",
+        "priority": "medium",
+        "dependencies": [
+          4,
+          8
+        ],
+        "status": "pending",
+        "subtasks": []
+      }
+    ],
+    "metadata": {
+      "created": "2025-07-07T02:18:44.200Z",
+      "updated": "2025-07-07T03:25:20.080Z",
+      "description": "Tasks for master context"
+    }
+  }
 }
