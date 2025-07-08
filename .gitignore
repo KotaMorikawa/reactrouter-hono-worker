@@ -44,9 +44,6 @@ build/
 coverage/
 test-results/
 
-# Task Master
-.taskmaster/
-
 # Claude Code
 .claude/
 
