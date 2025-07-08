@@ -10,6 +10,7 @@
 		"typecheck": "tsc --noEmit"
 	},
 	"dependencies": {
+		"@repo/shared": "workspace:*",
 		"hono": "^4.8.4"
 	},
 	"devDependencies": {
