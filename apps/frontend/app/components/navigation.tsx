@@ -26,12 +26,16 @@ interface NavigationProps {
 	isAuthenticated?: boolean;
 }
 
-export function Navigation({ isAuthenticated = false }: NavigationProps) {
+export function Navigation({ isAuthenticated }: NavigationProps) {
 	const auth = useAuth();
 	const [isOpen, setIsOpen] = useState(false);
-	const { logout, user } = auth || {};
+	const { logout, user, isAuthenticated: authIsAuthenticated } = auth || {};
 
-	const itemsToShow = navigationItems.filter((item) => !item.requiresAuth || isAuthenticated);
+	// propsのisAuthenticatedがあればそれを使用、なければauthContextの値を使用
+	const actualIsAuthenticated =
+		isAuthenticated !== undefined ? isAuthenticated : authIsAuthenticated;
+
+	const itemsToShow = navigationItems.filter((item) => !item.requiresAuth || actualIsAuthenticated);
 
 	const handleLogout = async () => {
 		if (logout) {
@@ -51,7 +55,7 @@ export function Navigation({ isAuthenticated = false }: NavigationProps) {
 					</div>
 
 					{/* Desktop Navigation */}
-					<div className="hidden items-center space-x-4 md:flex">
+					<div className="hidden items-center space-x-4 lg:flex">
 						{itemsToShow.map((item) => (
 							<NavLink
 								key={item.to}
@@ -66,13 +70,18 @@ export function Navigation({ isAuthenticated = false }: NavigationProps) {
 							</NavLink>
 						))}
 
-						{isAuthenticated ? (
+						{actualIsAuthenticated ? (
 							<>
 								<div className="ml-4 flex items-center space-x-2">
 									<User className="h-4 w-4" />
 									<span className="text-muted-foreground text-sm">{user?.name}</span>
 								</div>
-								<Button variant="outline" size="sm" onClick={handleLogout}>
+								<Button
+									variant="outline"
+									size="sm"
+									onClick={handleLogout}
+									data-testid="logout-button"
+								>
 									<LogOut className="mr-2 h-4 w-4" />
 									ログアウト
 								</Button>
@@ -91,12 +100,13 @@ export function Navigation({ isAuthenticated = false }: NavigationProps) {
 					</div>
 
 					{/* Mobile menu button */}
-					<div className="flex items-center md:hidden">
+					<div className="flex items-center lg:hidden">
 						<Button
 							variant="ghost"
 							size="icon"
 							onClick={() => setIsOpen(!isOpen)}
 							aria-label="メニューを開く"
+							data-testid="mobile-menu-button"
 						>
 							{isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
 						</Button>
@@ -105,7 +115,7 @@ export function Navigation({ isAuthenticated = false }: NavigationProps) {
 
 				{/* Mobile Navigation */}
 				{isOpen && (
-					<div className="border-t bg-background md:hidden">
+					<div className="border-t bg-background lg:hidden">
 						<div className="space-y-1 px-2 pt-2 pb-3">
 							{itemsToShow.map((item) => (
 								<NavLink
@@ -118,13 +128,19 @@ export function Navigation({ isAuthenticated = false }: NavigationProps) {
 								</NavLink>
 							))}
 
-							{isAuthenticated ? (
+							{actualIsAuthenticated ? (
 								<>
 									<div className="px-3 py-2 text-muted-foreground text-sm">
 										こんにちは、{user?.name}さん
 									</div>
 									<div className="px-3 py-2">
-										<Button variant="outline" size="sm" onClick={handleLogout} className="w-full">
+										<Button
+											variant="outline"
+											size="sm"
+											onClick={handleLogout}
+											className="w-full"
+											data-testid="mobile-logout-button"
+										>
 											<LogOut className="mr-2 h-4 w-4" />
 											ログアウト
 										</Button>

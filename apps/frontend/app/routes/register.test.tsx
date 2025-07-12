@@ -1,7 +1,8 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type * as React from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { renderWithAuth } from "~/test-utils";
 import type { Route } from "./+types/register";
 import Register, { meta } from "./register";
 
@@ -31,7 +32,7 @@ vi.mock("react-router", async () => {
 	};
 });
 
-// AuthContextのモック
+// AuthContextのモック関数
 const mockRegister = vi.fn();
 const mockClearError = vi.fn();
 const mockLogin = vi.fn();
@@ -49,18 +50,14 @@ const createMockAuthState = (overrides = {}) => ({
 	...overrides,
 });
 
-let mockAuthState = createMockAuthState();
-
-vi.mock("../contexts/auth-context", () => ({
-	useAuth: () => mockAuthState,
-	AuthProvider: ({ children }: { children: React.ReactNode }) => children,
-}));
-
 describe("Register Page", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
 		mockNavigate.mockClear();
-		mockAuthState = createMockAuthState();
+		mockLogin.mockClear();
+		mockClearError.mockClear();
+		mockRegister.mockClear();
+		mockLogout.mockClear();
 	});
 
 	describe("Meta function", () => {
@@ -76,7 +73,7 @@ describe("Register Page", () => {
 
 	describe("Component rendering", () => {
 		it("should render registration form elements", () => {
-			render(<Register />);
+			renderWithAuth(<Register />);
 
 			// フォーム要素の存在確認
 			expect(screen.getByText("新しいアカウントを作成")).toBeInTheDocument();
@@ -89,7 +86,7 @@ describe("Register Page", () => {
 		});
 
 		it("should render login link", () => {
-			render(<Register />);
+			renderWithAuth(<Register />);
 
 			const loginLink = screen.getByText("こちら");
 			expect(loginLink).toBeInTheDocument();
@@ -97,7 +94,7 @@ describe("Register Page", () => {
 		});
 
 		it("should have proper form structure", () => {
-			render(<Register />);
+			renderWithAuth(<Register />);
 
 			// フォーム構造の確認
 			const emailInput = screen.getByLabelText("メールアドレス");
@@ -123,7 +120,7 @@ describe("Register Page", () => {
 		});
 
 		it("should show password requirements description", () => {
-			render(<Register />);
+			renderWithAuth(<Register />);
 
 			expect(
 				screen.getByText(
@@ -137,7 +134,7 @@ describe("Register Page", () => {
 		it("should show validation errors for empty fields", async () => {
 			const user = userEvent.setup();
 
-			render(<Register />);
+			renderWithAuth(<Register />);
 
 			const submitButton = screen.getByRole("button", { name: /アカウント作成/ });
 
@@ -153,7 +150,7 @@ describe("Register Page", () => {
 		it("should show validation error for invalid email", async () => {
 			const user = userEvent.setup();
 
-			render(<Register />);
+			renderWithAuth(<Register />);
 
 			const emailInput = screen.getByLabelText("メールアドレス");
 			const submitButton = screen.getByRole("button", { name: /アカウント作成/ });
@@ -171,7 +168,7 @@ describe("Register Page", () => {
 		it("should show validation error for empty name", async () => {
 			const user = userEvent.setup();
 
-			render(<Register />);
+			renderWithAuth(<Register />);
 
 			const emailInput = screen.getByLabelText("メールアドレス");
 			const submitButton = screen.getByRole("button", { name: /アカウント作成/ });
@@ -189,7 +186,7 @@ describe("Register Page", () => {
 		it("should show validation error for weak password", async () => {
 			const user = userEvent.setup();
 
-			render(<Register />);
+			renderWithAuth(<Register />);
 
 			const emailInput = screen.getByLabelText("メールアドレス");
 			const nameInput = screen.getByLabelText("お名前");
@@ -213,7 +210,7 @@ describe("Register Page", () => {
 		it("should show validation error for mismatched passwords", async () => {
 			const user = userEvent.setup();
 
-			render(<Register />);
+			renderWithAuth(<Register />);
 
 			const emailInput = screen.getByLabelText("メールアドレス");
 			const nameInput = screen.getByLabelText("お名前");
@@ -238,7 +235,8 @@ describe("Register Page", () => {
 	describe("Form submission", () => {
 		it("should call register function with correct data on valid submission", async () => {
 			const user = userEvent.setup();
-			render(<Register />);
+			const authState = createMockAuthState();
+			renderWithAuth(<Register />, { authContext: authState });
 
 			const emailInput = screen.getByLabelText("メールアドレス");
 			const nameInput = screen.getByLabelText("お名前");
@@ -266,24 +264,25 @@ describe("Register Page", () => {
 
 		it("should show loading state during submission", () => {
 			// ローディング状態を設定
-			mockAuthState = createMockAuthState({ isLoading: true });
+			const authState = createMockAuthState({ isLoading: true });
 
-			render(<Register />);
+			renderWithAuth(<Register />, { authContext: authState });
 
 			// ローディング中のボタンテキストを確認
-			expect(screen.getByRole("button", { name: /登録中.../ })).toBeInTheDocument();
-			expect(screen.getByRole("button")).toBeDisabled();
+			const loadingButton = screen.getByRole("button", { name: /登録中.../ });
+			expect(loadingButton).toBeInTheDocument();
+			expect(loadingButton).toBeDisabled();
 		});
 	});
 
 	describe("Error handling", () => {
 		it("should display error message when registration fails", () => {
 			// エラー状態を設定
-			mockAuthState = createMockAuthState({
+			const authState = createMockAuthState({
 				error: "このメールアドレスは既に登録されています。",
 			});
 
-			render(<Register />);
+			renderWithAuth(<Register />, { authContext: authState });
 
 			// エラーアラートが表示されることを確認
 			expect(screen.getByText("このメールアドレスは既に登録されています。")).toBeInTheDocument();
@@ -293,11 +292,11 @@ describe("Register Page", () => {
 			vi.useFakeTimers();
 
 			// エラー状態を設定
-			mockAuthState = createMockAuthState({
+			const authState = createMockAuthState({
 				error: "登録エラー",
 			});
 
-			render(<Register />);
+			renderWithAuth(<Register />, { authContext: authState });
 
 			// 5秒後にclearErrorが呼ばれることを確認
 			vi.advanceTimersByTime(5000);
@@ -311,12 +310,12 @@ describe("Register Page", () => {
 	describe("Authentication redirect", () => {
 		it("should redirect to dashboard when already authenticated", () => {
 			// 認証済み状態を設定
-			mockAuthState = createMockAuthState({
+			const authState = createMockAuthState({
 				isAuthenticated: true,
 				user: { email: "test@example.com", name: "Test User" },
 			});
 
-			render(<Register />);
+			renderWithAuth(<Register />, { authContext: authState });
 
 			// ダッシュボードへのリダイレクトを確認
 			expect(screen.getByTestId("navigate-to")).toHaveTextContent("/dashboard");
@@ -325,7 +324,7 @@ describe("Register Page", () => {
 
 	describe("Accessibility", () => {
 		it("should have proper ARIA labels and structure", () => {
-			render(<Register />);
+			renderWithAuth(<Register />);
 
 			// フォームのアクセシビリティ確認
 			const emailInput = screen.getByLabelText("メールアドレス");
@@ -340,14 +339,14 @@ describe("Register Page", () => {
 		});
 
 		it("should have proper heading hierarchy", () => {
-			render(<Register />);
+			renderWithAuth(<Register />);
 
 			// ヘッダー構造の確認
 			expect(screen.getByText("新しいアカウントを作成")).toBeInTheDocument();
 		});
 
 		it("should have password description linked to password field", () => {
-			render(<Register />);
+			renderWithAuth(<Register />);
 
 			const passwordInput = screen.getByLabelText("パスワード");
 			const description = screen.getByText(
@@ -362,7 +361,7 @@ describe("Register Page", () => {
 
 	describe("User experience", () => {
 		it("should focus on email input when page loads", () => {
-			render(<Register />);
+			renderWithAuth(<Register />);
 
 			// 最初のフィールドにフォーカスがあることを確認（テスト環境では手動フォーカスが必要な場合がある）
 			const emailInput = screen.getByLabelText("メールアドレス");
@@ -371,7 +370,7 @@ describe("Register Page", () => {
 
 		it("should navigate between fields with tab", async () => {
 			const user = userEvent.setup();
-			render(<Register />);
+			renderWithAuth(<Register />);
 
 			const emailInput = screen.getByLabelText("メールアドレス");
 			const nameInput = screen.getByLabelText("お名前");
@@ -385,7 +384,7 @@ describe("Register Page", () => {
 
 		it("should show real-time validation feedback", async () => {
 			const user = userEvent.setup();
-			render(<Register />);
+			renderWithAuth(<Register />);
 
 			const passwordInput = screen.getByLabelText("パスワード");
 			const confirmPasswordInput = screen.getByLabelText("パスワード確認");

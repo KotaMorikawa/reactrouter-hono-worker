@@ -1,5 +1,6 @@
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
+import { renderWithAuthenticatedUser } from "~/test-utils";
 import type { Route } from "./+types/dashboard";
 import Dashboard, { meta } from "./dashboard";
 
@@ -17,26 +18,26 @@ describe("Dashboard Page", () => {
 
 	describe("Component rendering", () => {
 		it("should render main dashboard elements", () => {
-			render(<Dashboard />);
+			renderWithAuthenticatedUser(<Dashboard />);
 
-			// メインヘッダーの確認
-			expect(screen.getByText("ようこそ、ダッシュボードへ")).toBeInTheDocument();
+			// メインヘッダーの確認（複数存在する場合は最初のものを使用）
+			expect(screen.getAllByText("ダッシュボード")[0]).toBeInTheDocument();
 			expect(
 				screen.getByText("ここにユーザーの情報やアプリケーションのコンテンツが表示されます。")
 			).toBeInTheDocument();
 		});
 
 		it("should render all dashboard cards", () => {
-			render(<Dashboard />);
+			renderWithAuthenticatedUser(<Dashboard />);
 
 			// 3つのダッシュボードカードが存在することを確認
 			expect(screen.getByText("統計情報")).toBeInTheDocument();
 			expect(screen.getByText("最近の活動")).toBeInTheDocument();
-			expect(screen.getByText("設定")).toBeInTheDocument();
+			expect(screen.getAllByText("設定").length).toBeGreaterThanOrEqual(1);
 		});
 
 		it("should render statistics card with correct content", () => {
-			render(<Dashboard />);
+			renderWithAuthenticatedUser(<Dashboard />);
 
 			const statsCard = screen.getByText("統計情報");
 			expect(statsCard).toBeInTheDocument();
@@ -44,7 +45,7 @@ describe("Dashboard Page", () => {
 		});
 
 		it("should render recent activity card with correct content", () => {
-			render(<Dashboard />);
+			renderWithAuthenticatedUser(<Dashboard />);
 
 			const activityCard = screen.getByText("最近の活動");
 			expect(activityCard).toBeInTheDocument();
@@ -52,9 +53,9 @@ describe("Dashboard Page", () => {
 		});
 
 		it("should render settings card with correct content", () => {
-			render(<Dashboard />);
+			renderWithAuthenticatedUser(<Dashboard />);
 
-			const settingsCard = screen.getByText("設定");
+			const settingsCard = screen.getAllByText("設定")[0];
 			expect(settingsCard).toBeInTheDocument();
 			expect(screen.getByText("アカウント設定とプリファレンス")).toBeInTheDocument();
 		});
@@ -62,7 +63,7 @@ describe("Dashboard Page", () => {
 
 	describe("Layout and styling", () => {
 		it("should have proper container structure", () => {
-			render(<Dashboard />);
+			renderWithAuthenticatedUser(<Dashboard />);
 
 			// メインコンテナが存在することを確認
 			const container = document.querySelector(".py-6.sm\\:px-6.lg\\:px-8");
@@ -70,7 +71,7 @@ describe("Dashboard Page", () => {
 		});
 
 		it("should have responsive grid layout", () => {
-			render(<Dashboard />);
+			renderWithAuthenticatedUser(<Dashboard />);
 
 			// グリッドレイアウトのコンテナが存在することを確認
 			const gridContainer = document.querySelector(".grid.grid-cols-1.gap-6.md\\:grid-cols-3");
@@ -78,7 +79,7 @@ describe("Dashboard Page", () => {
 		});
 
 		it("should have dark mode support", () => {
-			render(<Dashboard />);
+			renderWithAuthenticatedUser(<Dashboard />);
 
 			// ダークモード対応のクラスが存在することを確認
 			const mainCard = document.querySelector(".bg-white.dark\\:bg-gray-800");
@@ -95,7 +96,7 @@ describe("Dashboard Page", () => {
 		});
 
 		it("should use proper color schemes for each card", () => {
-			render(<Dashboard />);
+			renderWithAuthenticatedUser(<Dashboard />);
 
 			// 統計情報カード（青）
 			const statsTitle = screen.getByText("統計情報");
@@ -105,19 +106,19 @@ describe("Dashboard Page", () => {
 			const activityTitle = screen.getByText("最近の活動");
 			expect(activityTitle).toHaveClass("text-green-900", "dark:text-green-100");
 
-			// 設定カード（紫）
-			const settingsTitle = screen.getByText("設定");
+			// 設定カード（紫）- h3要素のみを取得
+			const settingsTitle = screen.getByRole("heading", { name: "設定" });
 			expect(settingsTitle).toHaveClass("text-purple-900", "dark:text-purple-100");
 		});
 	});
 
 	describe("Accessibility", () => {
 		it("should have proper heading hierarchy", () => {
-			render(<Dashboard />);
+			renderWithAuthenticatedUser(<Dashboard />);
 
-			// メインヘッダー（h2）の確認
-			const mainHeading = screen.getByRole("heading", { level: 2 });
-			expect(mainHeading).toHaveTextContent("ようこそ、ダッシュボードへ");
+			// メインヘッダー（h1）の確認
+			const mainHeading = screen.getByRole("heading", { level: 1 });
+			expect(mainHeading).toHaveTextContent("ダッシュボード");
 
 			// サブヘッダー（h3）の確認
 			const subHeadings = screen.getAllByRole("heading", { level: 3 });
@@ -128,7 +129,7 @@ describe("Dashboard Page", () => {
 		});
 
 		it("should have readable text with proper contrast", () => {
-			render(<Dashboard />);
+			renderWithAuthenticatedUser(<Dashboard />);
 
 			// テキストが適切なコントラストクラスを持つことを確認
 			const mainText = screen.getByText(
@@ -138,7 +139,7 @@ describe("Dashboard Page", () => {
 		});
 
 		it("should be semantically structured", () => {
-			render(<Dashboard />);
+			renderWithAuthenticatedUser(<Dashboard />);
 
 			// セマンティックな構造の確認
 			const headings = screen.getAllByRole("heading");
@@ -154,15 +155,15 @@ describe("Dashboard Page", () => {
 
 	describe("Content structure", () => {
 		it("should display welcome message prominently", () => {
-			render(<Dashboard />);
+			renderWithAuthenticatedUser(<Dashboard />);
 
-			const welcomeMessage = screen.getByText("ようこそ、ダッシュボードへ");
+			const welcomeMessage = screen.getByRole("heading", { level: 1 });
 			expect(welcomeMessage).toBeInTheDocument();
 			expect(welcomeMessage).toHaveClass("font-bold", "text-2xl");
 		});
 
 		it("should display description text", () => {
-			render(<Dashboard />);
+			renderWithAuthenticatedUser(<Dashboard />);
 
 			const description = screen.getByText(
 				"ここにユーザーの情報やアプリケーションのコンテンツが表示されます。"
@@ -172,19 +173,19 @@ describe("Dashboard Page", () => {
 		});
 
 		it("should organize content in cards", () => {
-			render(<Dashboard />);
+			renderWithAuthenticatedUser(<Dashboard />);
 
 			// カードが適切に配置されていることを確認
-			const cardTitles = ["統計情報", "最近の活動", "設定"];
 			const cardDescriptions = [
 				"ユーザーの活動統計やメトリクスを表示",
 				"最近のユーザー活動を表示",
 				"アカウント設定とプリファレンス",
 			];
 
-			cardTitles.forEach((title) => {
-				expect(screen.getByText(title)).toBeInTheDocument();
-			});
+			// 個別にチェックして複数要素エラーを回避
+			expect(screen.getByText("統計情報")).toBeInTheDocument();
+			expect(screen.getByText("最近の活動")).toBeInTheDocument();
+			expect(screen.getByRole("heading", { name: "設定" })).toBeInTheDocument();
 
 			cardDescriptions.forEach((description) => {
 				expect(screen.getByText(description)).toBeInTheDocument();
@@ -194,7 +195,7 @@ describe("Dashboard Page", () => {
 
 	describe("Responsive design", () => {
 		it("should have responsive classes", () => {
-			render(<Dashboard />);
+			renderWithAuthenticatedUser(<Dashboard />);
 
 			// レスポンシブデザインのクラスが存在することを確認
 			const outerContainer = document.querySelector(".py-6.sm\\:px-6.lg\\:px-8");
@@ -208,7 +209,7 @@ describe("Dashboard Page", () => {
 		});
 
 		it("should handle different screen sizes", () => {
-			render(<Dashboard />);
+			renderWithAuthenticatedUser(<Dashboard />);
 
 			// モバイル（1列）からデスクトップ（3列）へのグリッド変更
 			const grid = document.querySelector(".grid-cols-1.gap-6.md\\:grid-cols-3");
@@ -218,7 +219,7 @@ describe("Dashboard Page", () => {
 
 	describe("Visual design", () => {
 		it("should have proper spacing and padding", () => {
-			render(<Dashboard />);
+			renderWithAuthenticatedUser(<Dashboard />);
 
 			// メインカードのパディング
 			const mainCard = document.querySelector(".p-8");
@@ -230,7 +231,7 @@ describe("Dashboard Page", () => {
 		});
 
 		it("should have rounded corners and shadows", () => {
-			render(<Dashboard />);
+			renderWithAuthenticatedUser(<Dashboard />);
 
 			// メインカードの角丸とシャドウ
 			const mainCard = document.querySelector(".rounded-lg.shadow");
@@ -242,10 +243,10 @@ describe("Dashboard Page", () => {
 		});
 
 		it("should use consistent typography", () => {
-			render(<Dashboard />);
+			renderWithAuthenticatedUser(<Dashboard />);
 
 			// メインタイトルのタイポグラフィ
-			const mainTitle = screen.getByText("ようこそ、ダッシュボードへ");
+			const mainTitle = screen.getByRole("heading", { level: 1 });
 			expect(mainTitle).toHaveClass("font-bold", "text-2xl");
 
 			// カードタイトルのタイポグラフィ
@@ -258,16 +259,16 @@ describe("Dashboard Page", () => {
 
 	describe("User experience", () => {
 		it("should provide clear navigation cues", () => {
-			render(<Dashboard />);
+			renderWithAuthenticatedUser(<Dashboard />);
 
 			// ユーザーが何をできるかが明確であることを確認
 			expect(screen.getByText("統計情報")).toBeInTheDocument();
 			expect(screen.getByText("最近の活動")).toBeInTheDocument();
-			expect(screen.getByText("設定")).toBeInTheDocument();
+			expect(screen.getAllByText("設定").length).toBeGreaterThanOrEqual(1);
 		});
 
 		it("should display helpful descriptions", () => {
-			render(<Dashboard />);
+			renderWithAuthenticatedUser(<Dashboard />);
 
 			// 各セクションが何をするかの説明が存在
 			expect(screen.getByText("ユーザーの活動統計やメトリクスを表示")).toBeInTheDocument();
@@ -276,7 +277,7 @@ describe("Dashboard Page", () => {
 		});
 
 		it("should have centered layout for better focus", () => {
-			render(<Dashboard />);
+			renderWithAuthenticatedUser(<Dashboard />);
 
 			// 中央揃えのレイアウト
 			const centeredContainer = document.querySelector(".text-center");

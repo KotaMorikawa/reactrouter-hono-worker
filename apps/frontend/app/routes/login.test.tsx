@@ -1,7 +1,8 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type * as React from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { renderWithAuth } from "~/test-utils";
 import type { Route } from "./+types/login";
 import Login, { meta } from "./login";
 
@@ -31,7 +32,7 @@ vi.mock("react-router", async () => {
 	};
 });
 
-// AuthContextのモック
+// AuthContextのモック関数
 const mockLogin = vi.fn();
 const mockClearError = vi.fn();
 const mockRegister = vi.fn();
@@ -49,18 +50,14 @@ const createMockAuthState = (overrides = {}) => ({
 	...overrides,
 });
 
-let mockAuthState = createMockAuthState();
-
-vi.mock("../contexts/auth-context", () => ({
-	useAuth: () => mockAuthState,
-	AuthProvider: ({ children }: { children: React.ReactNode }) => children,
-}));
-
 describe("Login Page", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
 		mockNavigate.mockClear();
-		mockAuthState = createMockAuthState();
+		mockLogin.mockClear();
+		mockClearError.mockClear();
+		mockRegister.mockClear();
+		mockLogout.mockClear();
 	});
 
 	describe("Meta function", () => {
@@ -76,7 +73,7 @@ describe("Login Page", () => {
 
 	describe("Component rendering", () => {
 		it("should render login form elements", () => {
-			render(<Login />);
+			renderWithAuth(<Login />);
 
 			// フォーム要素の存在確認
 			expect(screen.getByText("アカウントにログイン")).toBeInTheDocument();
@@ -89,7 +86,7 @@ describe("Login Page", () => {
 		});
 
 		it("should render registration link", () => {
-			render(<Login />);
+			renderWithAuth(<Login />);
 
 			const registrationLink = screen.getByText("こちら");
 			expect(registrationLink).toBeInTheDocument();
@@ -97,7 +94,7 @@ describe("Login Page", () => {
 		});
 
 		it("should have proper form structure", () => {
-			render(<Login />);
+			renderWithAuth(<Login />);
 
 			// フォーム構造の確認
 			const emailInput = screen.getByLabelText("メールアドレス");
@@ -117,7 +114,7 @@ describe("Login Page", () => {
 		it("should show validation errors for empty fields", async () => {
 			const user = userEvent.setup();
 
-			render(<Login />);
+			renderWithAuth(<Login />);
 
 			const submitButton = screen.getByRole("button", { name: /ログイン/ });
 
@@ -133,7 +130,7 @@ describe("Login Page", () => {
 		it("should show validation error for invalid email", async () => {
 			const user = userEvent.setup();
 
-			render(<Login />);
+			renderWithAuth(<Login />);
 
 			const emailInput = screen.getByLabelText("メールアドレス");
 			const submitButton = screen.getByRole("button", { name: /ログイン/ });
@@ -151,7 +148,7 @@ describe("Login Page", () => {
 		it("should show validation error for short password", async () => {
 			const user = userEvent.setup();
 
-			render(<Login />);
+			renderWithAuth(<Login />);
 
 			const emailInput = screen.getByLabelText("メールアドレス");
 			const passwordInput = screen.getByLabelText("パスワード");
@@ -172,7 +169,8 @@ describe("Login Page", () => {
 	describe("Form submission", () => {
 		it("should call login function with correct data on valid submission", async () => {
 			const user = userEvent.setup();
-			render(<Login />);
+			const authState = createMockAuthState();
+			renderWithAuth(<Login />, { authContext: authState });
 
 			const emailInput = screen.getByLabelText("メールアドレス");
 			const passwordInput = screen.getByLabelText("パスワード");
@@ -191,24 +189,25 @@ describe("Login Page", () => {
 
 		it("should show loading state during submission", () => {
 			// ローディング状態を設定
-			mockAuthState = createMockAuthState({ isLoading: true });
+			const authState = createMockAuthState({ isLoading: true });
 
-			render(<Login />);
+			renderWithAuth(<Login />, { authContext: authState });
 
 			// ローディング中のボタンテキストを確認
-			expect(screen.getByRole("button", { name: /ログイン中.../ })).toBeInTheDocument();
-			expect(screen.getByRole("button")).toBeDisabled();
+			const loadingButton = screen.getByRole("button", { name: /ログイン中.../ });
+			expect(loadingButton).toBeInTheDocument();
+			expect(loadingButton).toBeDisabled();
 		});
 	});
 
 	describe("Error handling", () => {
 		it("should display error message when login fails", () => {
 			// エラー状態を設定
-			mockAuthState = createMockAuthState({
+			const authState = createMockAuthState({
 				error: "ログインに失敗しました。メールアドレスとパスワードを確認してください。",
 			});
 
-			render(<Login />);
+			renderWithAuth(<Login />, { authContext: authState });
 
 			// エラーアラートが表示されることを確認
 			expect(
@@ -220,11 +219,11 @@ describe("Login Page", () => {
 			vi.useFakeTimers();
 
 			// エラー状態を設定
-			mockAuthState = createMockAuthState({
+			const authState = createMockAuthState({
 				error: "ログインエラー",
 			});
 
-			render(<Login />);
+			renderWithAuth(<Login />, { authContext: authState });
 
 			// 5秒後にclearErrorが呼ばれることを確認
 			vi.advanceTimersByTime(5000);
@@ -238,12 +237,12 @@ describe("Login Page", () => {
 	describe("Authentication redirect", () => {
 		it("should redirect to dashboard when already authenticated", () => {
 			// 認証済み状態を設定
-			mockAuthState = createMockAuthState({
+			const authState = createMockAuthState({
 				isAuthenticated: true,
 				user: { email: "test@example.com", name: "Test User" },
 			});
 
-			render(<Login />);
+			renderWithAuth(<Login />, { authContext: authState });
 
 			// ダッシュボードへのリダイレクトを確認
 			expect(screen.getByTestId("navigate-to")).toHaveTextContent("/dashboard");
@@ -252,7 +251,7 @@ describe("Login Page", () => {
 
 	describe("Accessibility", () => {
 		it("should have proper ARIA labels and structure", () => {
-			render(<Login />);
+			renderWithAuth(<Login />);
 
 			// フォームのアクセシビリティ確認
 			const emailInput = screen.getByLabelText("メールアドレス");
@@ -263,7 +262,7 @@ describe("Login Page", () => {
 		});
 
 		it("should have proper heading hierarchy", () => {
-			render(<Login />);
+			renderWithAuth(<Login />);
 
 			// ヘッダー構造の確認（CardTitleは実際はh1ではない可能性があるので調整）
 			expect(screen.getByText("アカウントにログイン")).toBeInTheDocument();

@@ -1,12 +1,13 @@
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
+import { renderWithAuth } from "~/test-utils";
 import type { Route } from "./+types/home";
 import Home, { meta } from "./home";
 
 describe("Home Route", () => {
 	describe("Component", () => {
 		it("should render welcome component", () => {
-			render(<Home />);
+			renderWithAuth(<Home />);
 
 			// Welcome コンポーネントの要素が存在することを確認
 			expect(screen.getByText("What's next?")).toBeInTheDocument();
@@ -15,7 +16,7 @@ describe("Home Route", () => {
 		});
 
 		it("should have proper layout structure", () => {
-			render(<Home />);
+			renderWithAuth(<Home />);
 
 			// 基本的なレイアウト構造を確認
 			const container = screen.getByRole("main");
@@ -24,7 +25,7 @@ describe("Home Route", () => {
 		});
 
 		it("should render React Router logo images", () => {
-			render(<Home />);
+			renderWithAuth(<Home />);
 
 			// ロゴ画像が複数存在することを確認（ライト・ダーク両方）
 			const logos = screen.getAllByAltText("React Router");
@@ -34,7 +35,7 @@ describe("Home Route", () => {
 		});
 
 		it("should have external links with proper attributes", () => {
-			render(<Home />);
+			renderWithAuth(<Home />);
 
 			// 外部リンクが正しい属性を持つことを確認
 			const docsLink = screen.getByRole("link", { name: /React Router Docs/i });
@@ -49,7 +50,7 @@ describe("Home Route", () => {
 		});
 
 		it("should have dark mode compatibility", () => {
-			render(<Home />);
+			renderWithAuth(<Home />);
 
 			// ダークモード対応のクラスが存在することを確認
 			const container = document.querySelector(".min-h-screen");
@@ -76,7 +77,7 @@ describe("Home Route", () => {
 
 	describe("Accessibility", () => {
 		it("should have proper heading hierarchy", () => {
-			render(<Home />);
+			renderWithAuth(<Home />);
 
 			// ヘッダー要素の存在を確認
 			const header = screen.getByRole("banner");
@@ -84,11 +85,12 @@ describe("Home Route", () => {
 		});
 
 		it("should have proper navigation structure", () => {
-			render(<Home />);
+			renderWithAuth(<Home />);
 
-			// ナビゲーション要素の存在を確認
-			const nav = screen.getByRole("navigation");
-			expect(nav).toBeInTheDocument();
+			// ナビゲーション要素の存在を確認（複数ある場合は最初のものを使用）
+			const navs = screen.getAllByRole("navigation");
+			expect(navs.length).toBeGreaterThan(0);
+			expect(navs[0]).toBeInTheDocument();
 
 			// リストの構造を確認
 			const list = screen.getByRole("list");
@@ -99,7 +101,7 @@ describe("Home Route", () => {
 		});
 
 		it("should have accessible images with alt text", () => {
-			render(<Home />);
+			renderWithAuth(<Home />);
 
 			// alt属性を持つ画像を確認
 			const images = screen.getAllByRole("img");
@@ -114,7 +116,7 @@ describe("Home Route", () => {
 		});
 
 		it("should have proper ARIA labels for icons", () => {
-			render(<Home />);
+			renderWithAuth(<Home />);
 
 			// SVGアイコンのaria-label属性を確認
 			const svgIcons = document.querySelectorAll("svg[aria-label]");

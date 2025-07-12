@@ -1,5 +1,12 @@
 import type { BaseUser } from "@repo/shared";
-import { createContext, type ReactNode, useContext, useEffect, useReducer } from "react";
+import {
+	createContext,
+	type ReactNode,
+	useCallback,
+	useContext,
+	useEffect,
+	useReducer,
+} from "react";
 
 interface AuthState {
 	user: BaseUser | null;
@@ -64,7 +71,7 @@ function authReducer(state: AuthState, action: AuthAction): AuthState {
 	}
 }
 
-interface AuthContextType extends AuthState {
+export interface AuthContextType extends AuthState {
 	login: (email: string, password: string) => Promise<void>;
 	register: (
 		email: string,
@@ -84,6 +91,42 @@ interface AuthProviderProps {
 
 export function AuthProvider({ children }: AuthProviderProps) {
 	const [state, dispatch] = useReducer(authReducer, initialState);
+
+	// WebKit対応のlocalStorage安全アクセス関数
+	const safeLocalStorageSet = useCallback((key: string, value: string): boolean => {
+		try {
+			if (typeof window !== "undefined" && window.localStorage) {
+				localStorage.setItem(key, value);
+				return true;
+			}
+		} catch (error) {
+			console.warn("LocalStorage access denied (WebKit):", error);
+		}
+		return false;
+	}, []);
+
+	const safeLocalStorageGet = useCallback((key: string): string | null => {
+		try {
+			if (typeof window !== "undefined" && window.localStorage) {
+				return localStorage.getItem(key);
+			}
+		} catch (error) {
+			console.warn("LocalStorage access denied (WebKit):", error);
+		}
+		return null;
+	}, []);
+
+	const safeLocalStorageRemove = useCallback((key: string): boolean => {
+		try {
+			if (typeof window !== "undefined" && window.localStorage) {
+				localStorage.removeItem(key);
+				return true;
+			}
+		} catch (error) {
+			console.warn("LocalStorage access denied (WebKit):", error);
+		}
+		return false;
+	}, []);
 
 	// TODO: 実際のAPI統合時に実装
 	const login = async (email: string, password: string): Promise<void> => {
@@ -105,8 +148,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
 				lastLogin: new Date(),
 			};
 
-			// JWTトークンをlocalStorageに保存（モック）
-			localStorage.setItem("authToken", "mock-jwt-token");
+			// JWTトークンをlocalStorageに保存（WebKit対応）
+			safeLocalStorageSet("authToken", "mock-jwt-token");
 
 			dispatch({ type: "AUTH_SUCCESS", payload: { user: mockUser } });
 		} catch (error) {
@@ -139,8 +182,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
 				lastLogin: undefined,
 			};
 
-			// JWTトークンをlocalStorageに保存（モック）
-			localStorage.setItem("authToken", "mock-jwt-token");
+			// JWTトークンをlocalStorageに保存（WebKit対応）
+			safeLocalStorageSet("authToken", "mock-jwt-token");
 
 			dispatch({ type: "AUTH_SUCCESS", payload: { user: mockUser } });
 		} catch (error) {
@@ -152,13 +195,19 @@ export function AuthProvider({ children }: AuthProviderProps) {
 	const logout = async (): Promise<void> => {
 		try {
 			// TODO: APIで無効化
-			localStorage.removeItem("authToken");
+			safeLocalStorageRemove("authToken");
 			dispatch({ type: "AUTH_LOGOUT" });
+
+			// ログアウト後にログインページにリダイレクト
+			window.location.href = "/login";
 		} catch (error) {
 			console.error("Logout error:", error);
 			// ローカルのクリーンアップは実行
-			localStorage.removeItem("authToken");
+			safeLocalStorageRemove("authToken");
 			dispatch({ type: "AUTH_LOGOUT" });
+
+			// エラーが発生してもリダイレクト
+			window.location.href = "/login";
 		}
 	};
 
@@ -170,7 +219,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 	useEffect(() => {
 		const checkAuthStatus = async () => {
 			try {
-				const token = localStorage.getItem("authToken");
+				const token = safeLocalStorageGet("authToken");
 				if (token) {
 					// TODO: トークンの検証とユーザー情報の取得
 					const mockUser: BaseUser = {
@@ -188,13 +237,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
 					dispatch({ type: "AUTH_LOGOUT" });
 				}
 			} catch (_error) {
-				localStorage.removeItem("authToken");
+				safeLocalStorageRemove("authToken");
 				dispatch({ type: "AUTH_LOGOUT" });
 			}
 		};
 
 		checkAuthStatus();
-	}, []);
+	}, [safeLocalStorageGet, safeLocalStorageRemove]);
 
 	const value: AuthContextType = {
 		...state,
