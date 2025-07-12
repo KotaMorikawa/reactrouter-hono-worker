@@ -82,7 +82,11 @@ export function requirePermissionManagement() {
 /**
  * Combine multiple middleware functions
  */
-export function combine(...middlewares: Array<(c: Context<{ Bindings: Env }>, next: Next) => Promise<undefined | Response>>) {
+export function combine(
+	...middlewares: Array<
+		(c: Context<{ Bindings: Env }>, next: Next) => Promise<undefined | Response>
+	>
+) {
 	return async (c: Context<{ Bindings: Env }>, next: Next): Promise<undefined | Response> => {
 		// Execute middlewares in sequence
 		for (const middleware of middlewares) {

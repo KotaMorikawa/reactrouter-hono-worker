@@ -23,8 +23,8 @@ describe("PermissionService", () => {
 		JWT_SECRET: "test-secret",
 		JWT_REFRESH_SECRET: "test-refresh-secret",
 		DATABASE_URL: "postgresql://test",
-		AUTH_KV: {} as any,
-		RATE_LIMIT_KV: {} as any,
+		AUTH_KV: {} as KVNamespace,
+		RATE_LIMIT_KV: {} as KVNamespace,
 		ENVIRONMENT: "test",
 	};
 
@@ -51,7 +51,7 @@ describe("PermissionService", () => {
 						}),
 					}),
 				}),
-			} as any);
+			} as unknown as ReturnType<typeof createDatabaseConnection>);
 
 			// Act
 			const result = await checkPermission(mockEnv, userId, resource, action);
@@ -78,7 +78,7 @@ describe("PermissionService", () => {
 						}),
 					}),
 				}),
-			} as any);
+			} as unknown as ReturnType<typeof createDatabaseConnection>);
 
 			// Act
 			const result = await checkPermission(mockEnv, userId, resource, action);
@@ -105,7 +105,7 @@ describe("PermissionService", () => {
 						}),
 					}),
 				}),
-			} as any);
+			} as unknown as ReturnType<typeof createDatabaseConnection>);
 
 			// Act
 			const result = await getUserRoles(mockEnv, userId);
@@ -138,7 +138,7 @@ describe("PermissionService", () => {
 						}),
 					}),
 				}),
-			} as any);
+			} as unknown as ReturnType<typeof createDatabaseConnection>);
 
 			// Act
 			const result = await getUserPermissions(mockEnv, userId);

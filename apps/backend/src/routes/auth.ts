@@ -18,8 +18,8 @@ import {
 	recordSuspiciousActivity,
 } from "../lib/rate-limit";
 import { authMiddleware, requireAuth } from "../middleware/auth";
+import { adminOnly, viewerAccess } from "../middleware/rbac";
 import { loginRateLimitMiddleware } from "../middleware/security";
-import { viewerAccess, adminOnly } from "../middleware/rbac";
 
 // Mock implementations for database and schema - will be replaced with actual imports
 interface MockTable {
@@ -98,6 +98,9 @@ const authRouter = new Hono<{ Bindings: Env }>();
 
 // Apply security middleware to all auth routes
 authRouter.use("*", loginRateLimitMiddleware());
+
+// Apply auth middleware to all routes for user context
+authRouter.use("*", authMiddleware);
 
 // Skip CSRF in test environment
 authRouter.use("*", async (c, next) => {

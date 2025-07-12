@@ -68,9 +68,9 @@ app.get("/", (c) => {
 	return c.json({ message: "Hono Backend API", version: "1.0.0", status: "healthy" });
 });
 
+import adminRouter from "./routes/admin";
 // API routes
 import authRouter from "./routes/auth";
-import adminRouter from "./routes/admin";
 
 app.route("/auth", authRouter);
 app.route("/admin", adminRouter);

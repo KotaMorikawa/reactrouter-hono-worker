@@ -114,7 +114,6 @@ export function requirePermission(resource: string, action: string) {
 	};
 }
 
-
 /**
  * Extract user ID from context
  */

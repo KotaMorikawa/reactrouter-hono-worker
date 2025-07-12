@@ -1,8 +1,8 @@
 import { Hono } from "hono";
 import type { Env } from "../index";
-import { adminOnly, rbacManagementAccess } from "../middleware/rbac";
 import { authMiddleware, getCurrentUserId } from "../middleware/auth";
-import { getUserRoles, getUserPermissions } from "../services/permission.service";
+import { adminOnly, rbacManagementAccess } from "../middleware/rbac";
+import { getUserPermissions, getUserRoles } from "../services/permission.service";
 
 const adminRouter = new Hono<{ Bindings: Env }>();
 
@@ -20,7 +20,7 @@ const mockUsers = [
 		updatedAt: new Date("2024-01-01"),
 	},
 	{
-		id: "user-2", 
+		id: "user-2",
 		email: "editor@example.com",
 		name: "Editor User",
 		emailVerified: true,
@@ -29,7 +29,7 @@ const mockUsers = [
 	},
 	{
 		id: "user-3",
-		email: "viewer@example.com", 
+		email: "viewer@example.com",
 		name: "Viewer User",
 		emailVerified: false,
 		createdAt: new Date("2024-01-03"),
@@ -118,7 +118,7 @@ const mockPermissions = [
 // Mock user-role assignments
 const mockUserRoles = new Map([
 	["user-1", ["role-1"]], // admin
-	["user-2", ["role-2"]], // editor  
+	["user-2", ["role-2"]], // editor
 	["user-3", ["role-3"]], // viewer
 ]);
 
@@ -148,7 +148,7 @@ adminRouter.get("/users", adminOnly(), async (c) => {
 adminRouter.get("/users/:id", adminOnly(), async (c) => {
 	try {
 		const userId = c.req.param("id");
-		const user = mockUsers.find(u => u.id === userId);
+		const user = mockUsers.find((u) => u.id === userId);
 
 		if (!user) {
 			return c.json({ error: "User not found" }, 404);
@@ -167,8 +167,8 @@ adminRouter.put("/users/:id", adminOnly(), async (c) => {
 		const userId = c.req.param("id");
 		const body = await c.req.json();
 		const { name, emailVerified } = body;
-		
-		const userIndex = mockUsers.findIndex(u => u.id === userId);
+
+		const userIndex = mockUsers.findIndex((u) => u.id === userId);
 
 		if (userIndex === -1) {
 			return c.json({ error: "User not found" }, 404);
@@ -176,12 +176,12 @@ adminRouter.put("/users/:id", adminOnly(), async (c) => {
 
 		// Update user
 		if (name) mockUsers[userIndex].name = name;
-		if (typeof emailVerified === 'boolean') mockUsers[userIndex].emailVerified = emailVerified;
+		if (typeof emailVerified === "boolean") mockUsers[userIndex].emailVerified = emailVerified;
 		mockUsers[userIndex].updatedAt = new Date();
-		
-		return c.json({ 
+
+		return c.json({
 			message: "User updated successfully",
-			user: mockUsers[userIndex]
+			user: mockUsers[userIndex],
 		});
 	} catch (error) {
 		console.error("Failed to update user:", error);
@@ -194,13 +194,13 @@ adminRouter.delete("/users/:id", adminOnly(), async (c) => {
 	try {
 		const userId = c.req.param("id");
 		const currentUserId = getCurrentUserId(c);
-		
+
 		// Prevent admin from deleting themselves
 		if (userId === currentUserId) {
 			return c.json({ error: "Cannot delete your own account" }, 400);
 		}
-		
-		const userIndex = mockUsers.findIndex(u => u.id === userId);
+
+		const userIndex = mockUsers.findIndex((u) => u.id === userId);
 
 		if (userIndex === -1) {
 			return c.json({ error: "User not found" }, 404);
@@ -209,7 +209,7 @@ adminRouter.delete("/users/:id", adminOnly(), async (c) => {
 		// Delete user and their role assignments
 		mockUsers.splice(userIndex, 1);
 		mockUserRoles.delete(userId);
-		
+
 		return c.json({ message: "User deleted successfully" });
 	} catch (error) {
 		console.error("Failed to delete user:", error);
@@ -236,13 +236,13 @@ adminRouter.post("/roles", rbacManagementAccess(), async (c) => {
 	try {
 		const body = await c.req.json();
 		const { name, description } = body;
-		
+
 		if (!name) {
 			return c.json({ error: "Role name is required" }, 400);
 		}
-		
+
 		// Check if role already exists
-		if (mockRoles.find(r => r.name === name)) {
+		if (mockRoles.find((r) => r.name === name)) {
 			return c.json({ error: "Role already exists" }, 400);
 		}
 
@@ -253,13 +253,13 @@ adminRouter.post("/roles", rbacManagementAccess(), async (c) => {
 			description: description || "",
 			createdAt: new Date(),
 		};
-		
+
 		mockRoles.push(newRole);
 		mockRolePermissions.set(newRole.id, []); // Start with no permissions
-		
-		return c.json({ 
+
+		return c.json({
 			message: "Role created successfully",
-			role: newRole
+			role: newRole,
 		});
 	} catch (error) {
 		console.error("Failed to create role:", error);
@@ -273,8 +273,8 @@ adminRouter.put("/roles/:id", rbacManagementAccess(), async (c) => {
 		const roleId = c.req.param("id");
 		const body = await c.req.json();
 		const { name, description } = body;
-		
-		const roleIndex = mockRoles.findIndex(r => r.id === roleId);
+
+		const roleIndex = mockRoles.findIndex((r) => r.id === roleId);
 
 		if (roleIndex === -1) {
 			return c.json({ error: "Role not found" }, 404);
@@ -288,10 +288,10 @@ adminRouter.put("/roles/:id", rbacManagementAccess(), async (c) => {
 		// Update role
 		if (name) mockRoles[roleIndex].name = name;
 		if (description !== undefined) mockRoles[roleIndex].description = description;
-		
-		return c.json({ 
+
+		return c.json({
 			message: "Role updated successfully",
-			role: mockRoles[roleIndex]
+			role: mockRoles[roleIndex],
 		});
 	} catch (error) {
 		console.error("Failed to update role:", error);
@@ -303,7 +303,7 @@ adminRouter.put("/roles/:id", rbacManagementAccess(), async (c) => {
 adminRouter.delete("/roles/:id", rbacManagementAccess(), async (c) => {
 	try {
 		const roleId = c.req.param("id");
-		const roleIndex = mockRoles.findIndex(r => r.id === roleId);
+		const roleIndex = mockRoles.findIndex((r) => r.id === roleId);
 
 		if (roleIndex === -1) {
 			return c.json({ error: "Role not found" }, 404);
@@ -317,15 +317,15 @@ adminRouter.delete("/roles/:id", rbacManagementAccess(), async (c) => {
 		// Delete role and clean up assignments
 		mockRoles.splice(roleIndex, 1);
 		mockRolePermissions.delete(roleId);
-		
+
 		// Remove role from user assignments
 		for (const [userId, roleIds] of mockUserRoles) {
-			const filteredRoles = roleIds.filter(id => id !== roleId);
+			const filteredRoles = roleIds.filter((id) => id !== roleId);
 			if (filteredRoles.length !== roleIds.length) {
 				mockUserRoles.set(userId, filteredRoles);
 			}
 		}
-		
+
 		return c.json({ message: "Role deleted successfully" });
 	} catch (error) {
 		console.error("Failed to delete role:", error);
@@ -341,15 +341,15 @@ adminRouter.delete("/roles/:id", rbacManagementAccess(), async (c) => {
 adminRouter.get("/users/:id/roles", adminOnly(), async (c) => {
 	try {
 		const userId = c.req.param("id");
-		
+
 		// Check if user exists
-		if (!mockUsers.find(u => u.id === userId)) {
+		if (!mockUsers.find((u) => u.id === userId)) {
 			return c.json({ error: "User not found" }, 404);
 		}
 
 		const userRoleIds = mockUserRoles.get(userId) || [];
 		const userRolesList = userRoleIds
-			.map(roleId => mockRoles.find(r => r.id === roleId))
+			.map((roleId) => mockRoles.find((r) => r.id === roleId))
 			.filter(Boolean);
 
 		return c.json({ roles: userRolesList });
@@ -365,18 +365,18 @@ adminRouter.post("/users/:id/roles", adminOnly(), async (c) => {
 		const userId = c.req.param("id");
 		const body = await c.req.json();
 		const { roleId } = body;
-		
+
 		if (!roleId) {
 			return c.json({ error: "Role ID is required" }, 400);
 		}
-		
+
 		// Check if user exists
-		if (!mockUsers.find(u => u.id === userId)) {
+		if (!mockUsers.find((u) => u.id === userId)) {
 			return c.json({ error: "User not found" }, 404);
 		}
 
 		// Check if role exists
-		if (!mockRoles.find(r => r.id === roleId)) {
+		if (!mockRoles.find((r) => r.id === roleId)) {
 			return c.json({ error: "Role not found" }, 404);
 		}
 
@@ -388,7 +388,7 @@ adminRouter.post("/users/:id/roles", adminOnly(), async (c) => {
 
 		// Assign role to user
 		mockUserRoles.set(userId, [...userRoleIds, roleId]);
-		
+
 		return c.json({ message: "Role assigned successfully" });
 	} catch (error) {
 		console.error("Failed to assign role:", error);
@@ -402,10 +402,10 @@ adminRouter.delete("/users/:id/roles/:roleId", adminOnly(), async (c) => {
 		const userId = c.req.param("id");
 		const roleId = c.req.param("roleId");
 		const currentUserId = getCurrentUserId(c);
-		
+
 		// Prevent admin from removing their own admin role
 		if (userId === currentUserId) {
-			const role = mockRoles.find(r => r.id === roleId);
+			const role = mockRoles.find((r) => r.id === roleId);
 			if (role?.name === "admin") {
 				return c.json({ error: "Cannot remove admin role from yourself" }, 400);
 			}
@@ -418,9 +418,9 @@ adminRouter.delete("/users/:id/roles/:roleId", adminOnly(), async (c) => {
 		}
 
 		// Remove role from user
-		const filteredRoles = userRoleIds.filter(id => id !== roleId);
+		const filteredRoles = userRoleIds.filter((id) => id !== roleId);
 		mockUserRoles.set(userId, filteredRoles);
-		
+
 		return c.json({ message: "Role removed successfully" });
 	} catch (error) {
 		console.error("Failed to remove role:", error);
@@ -446,15 +446,15 @@ adminRouter.get("/permissions", rbacManagementAccess(), async (c) => {
 adminRouter.get("/roles/:id/permissions", rbacManagementAccess(), async (c) => {
 	try {
 		const roleId = c.req.param("id");
-		
+
 		// Check if role exists
-		if (!mockRoles.find(r => r.id === roleId)) {
+		if (!mockRoles.find((r) => r.id === roleId)) {
 			return c.json({ error: "Role not found" }, 404);
 		}
 
 		const rolePermissionIds = mockRolePermissions.get(roleId) || [];
 		const rolePermissionsList = rolePermissionIds
-			.map(permId => mockPermissions.find(p => p.id === permId))
+			.map((permId) => mockPermissions.find((p) => p.id === permId))
 			.filter(Boolean);
 
 		return c.json({ permissions: rolePermissionsList });
@@ -470,18 +470,18 @@ adminRouter.post("/roles/:id/permissions", rbacManagementAccess(), async (c) => 
 		const roleId = c.req.param("id");
 		const body = await c.req.json();
 		const { permissionId } = body;
-		
+
 		if (!permissionId) {
 			return c.json({ error: "Permission ID is required" }, 400);
 		}
-		
+
 		// Check if role exists
-		if (!mockRoles.find(r => r.id === roleId)) {
+		if (!mockRoles.find((r) => r.id === roleId)) {
 			return c.json({ error: "Role not found" }, 404);
 		}
 
 		// Check if permission exists
-		if (!mockPermissions.find(p => p.id === permissionId)) {
+		if (!mockPermissions.find((p) => p.id === permissionId)) {
 			return c.json({ error: "Permission not found" }, 404);
 		}
 
@@ -493,7 +493,7 @@ adminRouter.post("/roles/:id/permissions", rbacManagementAccess(), async (c) => 
 
 		// Assign permission to role
 		mockRolePermissions.set(roleId, [...rolePermissionIds, permissionId]);
-		
+
 		return c.json({ message: "Permission assigned successfully" });
 	} catch (error) {
 		console.error("Failed to assign permission:", error);
@@ -506,7 +506,7 @@ adminRouter.delete("/roles/:id/permissions/:permissionId", rbacManagementAccess(
 	try {
 		const roleId = c.req.param("id");
 		const permissionId = c.req.param("permissionId");
-		
+
 		// Check if assignment exists
 		const rolePermissionIds = mockRolePermissions.get(roleId) || [];
 		if (!rolePermissionIds.includes(permissionId)) {
@@ -514,9 +514,9 @@ adminRouter.delete("/roles/:id/permissions/:permissionId", rbacManagementAccess(
 		}
 
 		// Remove permission from role
-		const filteredPermissions = rolePermissionIds.filter(id => id !== permissionId);
+		const filteredPermissions = rolePermissionIds.filter((id) => id !== permissionId);
 		mockRolePermissions.set(roleId, filteredPermissions);
-		
+
 		return c.json({ message: "Permission removed successfully" });
 	} catch (error) {
 		console.error("Failed to remove permission:", error);
@@ -532,9 +532,9 @@ adminRouter.delete("/roles/:id/permissions/:permissionId", rbacManagementAccess(
 adminRouter.get("/users/:id/permissions", adminOnly(), async (c) => {
 	try {
 		const userId = c.req.param("id");
-		
+
 		// Check if user exists
-		if (!mockUsers.find(u => u.id === userId)) {
+		if (!mockUsers.find((u) => u.id === userId)) {
 			return c.json({ error: "User not found" }, 404);
 		}
 
@@ -550,9 +550,9 @@ adminRouter.get("/users/:id/permissions", adminOnly(), async (c) => {
 adminRouter.get("/users/:id/roles-service", adminOnly(), async (c) => {
 	try {
 		const userId = c.req.param("id");
-		
+
 		// Check if user exists
-		if (!mockUsers.find(u => u.id === userId)) {
+		if (!mockUsers.find((u) => u.id === userId)) {
 			return c.json({ error: "User not found" }, 404);
 		}
 
