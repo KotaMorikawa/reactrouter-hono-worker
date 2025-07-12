@@ -280,8 +280,62 @@
         "dependencies": [
           4
         ],
-        "status": "pending",
-        "subtasks": []
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Define RBAC Database Schema and Models",
+            "description": "Create database tables and Drizzle ORM schemas for roles, permissions, and user-role associations",
+            "dependencies": [],
+            "details": "Create tables: roles (id, name, description, hierarchy_level), permissions (id, resource, action, description), role_permissions (role_id, permission_id), user_roles (user_id, role_id). Update user table to include default_role. Define Drizzle schemas in packages/db with proper relationships and constraints. Create migration files for schema changes.",
+            "status": "done",
+            "testStrategy": "Unit tests for schema validation, integration tests for database operations and relationships"
+          },
+          {
+            "id": 2,
+            "title": "Implement Core RBAC Service Layer",
+            "description": "Create permission checking functions and role hierarchy logic in the backend",
+            "dependencies": [
+              1
+            ],
+            "details": "Implement PermissionService with methods: checkPermission(userId, resource, action), getUserRoles(userId), getUserPermissions(userId). Create RoleService with methods: assignRole(userId, roleId), removeRole(userId, roleId), getRoleHierarchy(). Implement role hierarchy logic where admin > editor > viewer > guest. Use resource.action format for permissions (e.g., 'posts.create', 'users.delete').",
+            "status": "done",
+            "testStrategy": "Unit tests for permission checking logic, role hierarchy validation, and service methods"
+          },
+          {
+            "id": 3,
+            "title": "Create RBAC Middleware for Route Protection",
+            "description": "Implement Hono middleware for automatic permission checking on protected routes",
+            "dependencies": [
+              2
+            ],
+            "details": "Create requirePermission(resource, action) middleware that extracts user from JWT, checks permissions using PermissionService, and returns 403 if unauthorized. Create requireRole(roleName) middleware for simple role-based checks. Implement hasAnyPermission([permissions]) for flexible authorization. Add proper error handling and logging for authorization failures.",
+            "status": "done",
+            "testStrategy": "Integration tests for middleware functionality, test cases for authorized/unauthorized access scenarios"
+          },
+          {
+            "id": 4,
+            "title": "Add Permission Decorators and Route Integration",
+            "description": "Apply RBAC middleware to API routes and create permission decorators for easy route protection",
+            "dependencies": [
+              3
+            ],
+            "details": "Create TypeScript decorators or helper functions for common permission patterns. Apply middleware to existing API routes: user management (admin only), post creation/editing (editor+), post viewing (viewer+). Create route groups with different permission levels. Update API route handlers to use permission middleware consistently.",
+            "status": "done",
+            "testStrategy": "End-to-end tests for protected routes, test different user roles accessing various endpoints"
+          },
+          {
+            "id": 5,
+            "title": "Implement Admin User and Role Management Endpoints",
+            "description": "Create admin-only API endpoints for managing users, roles, and permissions",
+            "dependencies": [
+              4
+            ],
+            "details": "Create admin endpoints: GET/POST/PUT/DELETE /admin/users (user management), GET/POST/PUT/DELETE /admin/roles (role management), POST /admin/users/:id/roles (assign/remove roles), GET /admin/permissions (list all permissions), POST /admin/roles/:id/permissions (manage role permissions). Include validation using Zod schemas, proper error handling, and audit logging for admin actions.",
+            "status": "done",
+            "testStrategy": "Integration tests for admin endpoints, test role assignment/removal, permission management workflows"
+          }
+        ]
       },
       {
         "id": 6,
@@ -383,7 +437,7 @@
     ],
     "metadata": {
       "created": "2025-07-07T02:18:44.200Z",
-      "updated": "2025-07-09T04:12:00.000Z",
+      "updated": "2025-07-12T05:30:09.990Z",
       "description": "Tasks for master context"
     }
   }

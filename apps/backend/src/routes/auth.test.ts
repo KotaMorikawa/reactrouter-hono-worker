@@ -5,8 +5,8 @@ import authRouter from "./auth";
 
 // Mock environment with KV stores
 const mockEnv = {
-	JWT_SECRET: "test-jwt-secret",
-	JWT_REFRESH_SECRET: "test-refresh-secret",
+	JWT_SECRET: "test-jwt-secret-with-sufficient-length-for-crypto-operations",
+	JWT_REFRESH_SECRET: "test-refresh-secret-with-sufficient-length-for-crypto-operations",
 	AUTH_KV: {
 		get: vi.fn(),
 		put: vi.fn(),
@@ -200,10 +200,23 @@ describe("Auth Routes", () => {
 
 	describe("GET /auth/reset-attempts/:userId", () => {
 		it("should return remaining attempts", async () => {
+			// Create admin JWT token for authorization
+			const { generateTokens } = await import("../lib/auth");
+			const adminUser = {
+				id: "admin-user-id",
+				email: "admin@example.com",
+				role: "admin",
+			};
+
+			const { accessToken } = await generateTokens(adminUser, mockEnv);
+
 			const res = await app.request(
 				"/auth/reset-attempts/user-123",
 				{
 					method: "GET",
+					headers: {
+						Authorization: `Bearer ${accessToken}`,
+					},
 				},
 				mockEnv
 			);

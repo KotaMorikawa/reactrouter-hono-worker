@@ -4,7 +4,7 @@
 	"private": true,
 	"description": "Database schema and migrations with Drizzle ORM",
 	"type": "module",
-	"main": "index.ts",
+	"main": "src/index.ts",
 	"scripts": {
 		"build": "tsc",
 		"dev": "tsc --watch",

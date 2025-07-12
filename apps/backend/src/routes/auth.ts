@@ -18,6 +18,7 @@ import {
 	recordSuspiciousActivity,
 } from "../lib/rate-limit";
 import { authMiddleware, requireAuth } from "../middleware/auth";
+import { adminOnly, viewerAccess } from "../middleware/rbac";
 import { loginRateLimitMiddleware } from "../middleware/security";
 
 // Mock implementations for database and schema - will be replaced with actual imports
@@ -97,6 +98,9 @@ const authRouter = new Hono<{ Bindings: Env }>();
 
 // Apply security middleware to all auth routes
 authRouter.use("*", loginRateLimitMiddleware());
+
+// Apply auth middleware to all routes for user context
+authRouter.use("*", authMiddleware);
 
 // Skip CSRF in test environment
 authRouter.use("*", async (c, next) => {
@@ -271,8 +275,8 @@ authRouter.post("/logout", authMiddleware, requireAuth, async (c) => {
 	}
 });
 
-// Get current user endpoint
-authRouter.get("/me", authMiddleware, requireAuth, async (c) => {
+// Get current user endpoint (requires viewer access)
+authRouter.get("/me", viewerAccess(), async (c) => {
 	try {
 		const user = c.get("user");
 		return c.json({ user });
@@ -406,8 +410,8 @@ authRouter.post("/reset-password/:token", async (c) => {
 	}
 });
 
-// Check reset attempts remaining endpoint
-authRouter.get("/reset-attempts/:userId", async (c) => {
+// Check reset attempts remaining endpoint (admin only for security)
+authRouter.get("/reset-attempts/:userId", adminOnly(), async (c) => {
 	try {
 		const userId = c.req.param("userId");
 
