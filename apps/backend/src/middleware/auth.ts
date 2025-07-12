@@ -1,6 +1,7 @@
 import type { Context, Next } from "hono";
 import type { Env } from "../index";
 import { extractBearerToken, verifyToken } from "../lib/auth";
+import { checkPermission } from "../services/permission.service";
 
 // Types for authenticated user
 export interface AuthenticatedUser {
@@ -101,10 +102,9 @@ export function requirePermission(resource: string, action: string) {
 			return c.json({ error: "Authentication required" }, 401);
 		}
 
-		// Check if user has required permission
-		// This is a simplified implementation
-		// In a real application, you would check against a permission database
-		const hasPermission = await checkUserPermission(user, resource, action);
+		// Check if user has required permission using database
+		const env = c.env;
+		const hasPermission = await checkPermission(env, user.id, resource, action);
 
 		if (!hasPermission) {
 			return c.json({ error: "Insufficient permissions" }, 403);
@@ -114,36 +114,6 @@ export function requirePermission(resource: string, action: string) {
 	};
 }
 
-/**
- * Check if user has specific permission
- * This is a simplified implementation
- */
-async function checkUserPermission(
-	user: AuthenticatedUser,
-	resource: string,
-	action: string
-): Promise<boolean> {
-	// Simplified permission check based on role
-	// In production, this would query a permission database
-
-	const permissions: Record<string, string[]> = {
-		admin: ["*.*"], // Admin can do everything
-		editor: ["posts.create", "posts.update", "posts.delete", "posts.read"],
-		viewer: ["posts.read"],
-		guest: [],
-	};
-
-	const userPermissions = permissions[user.role] || [];
-	const requiredPermission = `${resource}.${action}`;
-
-	// Check for wildcard permission
-	if (userPermissions.includes("*.*")) {
-		return true;
-	}
-
-	// Check for specific permission
-	return userPermissions.includes(requiredPermission);
-}
 
 /**
  * Extract user ID from context

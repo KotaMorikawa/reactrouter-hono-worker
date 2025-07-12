@@ -4,10 +4,22 @@ import { logger } from "hono/logger";
 import { secureHeaders } from "hono/secure-headers";
 import { comprehensiveSecurityMiddleware } from "./middleware/security";
 
+interface CloudflareBindings {
+	// KV namespaces
+	AUTH_KV: KVNamespace;
+	RATE_LIMIT_KV: KVNamespace;
+
+	// Environment variables
+	ENVIRONMENT?: string;
+}
+
 export interface Env extends CloudflareBindings {
 	// JWT secrets
 	JWT_SECRET: string;
 	JWT_REFRESH_SECRET: string;
+
+	// Database URL
+	DATABASE_URL: string;
 }
 
 const app = new Hono<{ Bindings: Env }>();
