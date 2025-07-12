@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router";
-import { describe, expect, it } from "vitest";
-import Settings from "./settings";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import Settings, { loader, meta } from "./settings";
 
 describe("Settings Page", () => {
 	it("should render settings page with all sections", () => {
@@ -112,5 +112,121 @@ describe("Settings Page", () => {
 		);
 
 		expect(screen.getByText("アプリケーションの設定をカスタマイズできます。")).toBeInTheDocument();
+	});
+});
+
+describe("Settings Meta Function", () => {
+	it("should return correct meta data", () => {
+		const metaArgs = {} as any; // Route.MetaArgs type
+		const result = meta(metaArgs);
+
+		expect(result).toEqual([
+			{ title: "設定 - React Router App" },
+			{ name: "description", content: "アプリケーション設定" },
+		]);
+	});
+});
+
+describe("Settings Loader Function", () => {
+	let mockRequest: Request;
+	let mockContext: any;
+
+	beforeEach(() => {
+		mockRequest = new Request("http://localhost:3000/settings");
+		mockContext = {
+			env: {
+				API_URL: "http://localhost:8787",
+			},
+		};
+		vi.clearAllMocks();
+	});
+
+	it("should return settings data when authenticated", async () => {
+		// モックJWTトークンを含むCookieを設定
+		const requestWithAuth = new Request("http://localhost:3000/settings", {
+			headers: {
+				Cookie: "auth-token=valid-jwt-token",
+			},
+		});
+
+		const result = await loader({
+			request: requestWithAuth,
+			context: mockContext,
+		} as any);
+
+		expect(result).toBeDefined();
+		// Response でない場合にのみ設定情報をチェック
+		if (!(result instanceof Response)) {
+			expect(result.settings).toBeDefined();
+			expect(result.user).toBeDefined();
+		}
+	});
+
+	it("should redirect to login when not authenticated", async () => {
+		const result = await loader({
+			request: mockRequest,
+			context: mockContext,
+		} as any);
+
+		expect(result).toBeInstanceOf(Response);
+		expect((result as Response).status).toBe(302);
+		expect((result as Response).headers.get("Location")).toBe("/login");
+	});
+
+	it("should handle invalid auth token", async () => {
+		const requestWithInvalidAuth = new Request("http://localhost:3000/settings", {
+			headers: {
+				Cookie: "auth-token=invalid-token",
+			},
+		});
+
+		const result = await loader({
+			request: requestWithInvalidAuth,
+			context: mockContext,
+		} as any);
+
+		expect(result).toBeInstanceOf(Response);
+		expect((result as Response).status).toBe(302);
+		expect((result as Response).headers.get("Location")).toBe("/login");
+	});
+
+	it("should return default settings for new users", async () => {
+		const requestWithAuth = new Request("http://localhost:3000/settings", {
+			headers: {
+				Cookie: "auth-token=new-user-token",
+			},
+		});
+
+		const result = await loader({
+			request: requestWithAuth,
+			context: mockContext,
+		} as any);
+
+		expect(result).toBeDefined();
+		// Response でない場合にのみ設定をチェック
+		if (!(result instanceof Response)) {
+			expect(result.settings).toEqual({
+				theme: "light",
+				language: "ja",
+				emailNotifications: true,
+				pushNotifications: false,
+			});
+		}
+	});
+
+	it("should handle API errors gracefully", async () => {
+		const requestWithAuth = new Request("http://localhost:3000/settings", {
+			headers: {
+				Cookie: "auth-token=api-error-token",
+			},
+		});
+
+		const result = await loader({
+			request: requestWithAuth,
+			context: mockContext,
+		} as any);
+
+		expect(result).toBeInstanceOf(Response);
+		expect((result as Response).status).toBe(500);
 	});
 });

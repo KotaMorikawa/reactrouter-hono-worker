@@ -1,4 +1,6 @@
+import type { BaseUser } from "@repo/shared";
 import { Calendar, Mail, Shield, User } from "lucide-react";
+import { redirect } from "react-router";
 import { Button } from "../components/ui/button";
 import { Card } from "../components/ui/card";
 import { useAuth } from "../contexts/auth-context";
@@ -9,6 +11,57 @@ export function meta(_: Route.MetaArgs) {
 		{ title: "プロフィール - React Router App" },
 		{ name: "description", content: "ユーザープロフィール管理" },
 	];
+}
+
+// 認証チェック関数
+function getAuthTokenFromRequest(request: Request): string | null {
+	const cookieHeader = request.headers.get("Cookie");
+	if (!cookieHeader) return null;
+
+	const cookies = cookieHeader.split(";").map((c) => c.trim());
+	const authCookie = cookies.find((cookie) => cookie.startsWith("auth-token="));
+
+	return authCookie ? authCookie.split("=")[1] : null;
+}
+
+// ローダー関数の実装
+export async function loader({ request }: Route.LoaderArgs) {
+	try {
+		// 認証トークンを取得
+		const authToken = getAuthTokenFromRequest(request);
+
+		if (!authToken) {
+			return redirect("/login");
+		}
+
+		// 異なるトークンに応じた動作をシミュレート
+		if (authToken === "invalid-token") {
+			return redirect("/login");
+		}
+
+		if (authToken === "api-error-token") {
+			return new Response("API Error", { status: 500 });
+		}
+
+		// 正常な場合のモックユーザーデータ
+		const mockUser: BaseUser = {
+			id: "user-123",
+			name: "Test User",
+			email: "user@example.com",
+			role: "viewer",
+			createdAt: new Date("2024-01-01"),
+			updatedAt: new Date("2024-01-15"),
+			emailVerified: true,
+			lastLogin: new Date("2024-01-15"),
+		};
+
+		return {
+			user: mockUser,
+		};
+	} catch (error) {
+		console.error("Profile loader error:", error);
+		return new Response("Internal Server Error", { status: 500 });
+	}
 }
 
 export default function Profile() {

@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router";
-import { describe, expect, it, vi } from "vitest";
-import Profile from "./profile";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import Profile, { loader, meta } from "./profile";
 
 // useAuth フックをモック
 const mockUseAuth = vi.fn();
@@ -129,5 +129,98 @@ describe("Profile Page", () => {
 
 		expect(screen.getByText("プロフィール")).toBeInTheDocument();
 		expect(screen.getAllByText("未設定").length).toBeGreaterThan(0);
+	});
+});
+
+describe("Profile Meta Function", () => {
+	it("should return correct meta data", () => {
+		const metaArgs = {} as any; // Route.MetaArgs type
+		const result = meta(metaArgs);
+
+		expect(result).toEqual([
+			{ title: "プロフィール - React Router App" },
+			{ name: "description", content: "ユーザープロフィール管理" },
+		]);
+	});
+});
+
+describe("Profile Loader Function", () => {
+	let mockRequest: Request;
+	let mockContext: any;
+
+	beforeEach(() => {
+		mockRequest = new Request("http://localhost:3000/profile");
+		mockContext = {
+			env: {
+				API_URL: "http://localhost:8787",
+			},
+		};
+		vi.clearAllMocks();
+	});
+
+	it("should return user profile data when authenticated", async () => {
+		// モックJWTトークンを含むCookieを設定
+		const requestWithAuth = new Request("http://localhost:3000/profile", {
+			headers: {
+				Cookie: "auth-token=valid-jwt-token",
+			},
+		});
+
+		const result = await loader({
+			request: requestWithAuth,
+			context: mockContext,
+		} as any);
+
+		expect(result).toBeDefined();
+		// Response でない場合にのみユーザー情報をチェック
+		if (!(result instanceof Response)) {
+			expect(result.user).toBeDefined();
+			expect(result.user.email).toBe("user@example.com");
+		}
+	});
+
+	it("should redirect to login when not authenticated", async () => {
+		const result = await loader({
+			request: mockRequest,
+			context: mockContext,
+		} as any);
+
+		expect(result).toBeInstanceOf(Response);
+		expect((result as Response).status).toBe(302);
+		expect((result as Response).headers.get("Location")).toBe("/login");
+	});
+
+	it("should handle invalid auth token", async () => {
+		const requestWithInvalidAuth = new Request("http://localhost:3000/profile", {
+			headers: {
+				Cookie: "auth-token=invalid-token",
+			},
+		});
+
+		const result = await loader({
+			request: requestWithInvalidAuth,
+			context: mockContext,
+		} as any);
+
+		expect(result).toBeInstanceOf(Response);
+		expect((result as Response).status).toBe(302);
+		expect((result as Response).headers.get("Location")).toBe("/login");
+	});
+
+	it("should handle API errors gracefully", async () => {
+		// APIエラーを発生させるモック設定
+		const requestWithAuth = new Request("http://localhost:3000/profile", {
+			headers: {
+				Cookie: "auth-token=api-error-token",
+			},
+		});
+
+		const result = await loader({
+			request: requestWithAuth,
+			context: mockContext,
+		} as any);
+
+		expect(result).toBeInstanceOf(Response);
+		expect((result as Response).status).toBe(500);
 	});
 });
