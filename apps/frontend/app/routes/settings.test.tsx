@@ -117,7 +117,8 @@ describe("Settings Page", () => {
 
 describe("Settings Meta Function", () => {
 	it("should return correct meta data", () => {
-		const metaArgs = {} as any; // Route.MetaArgs type
+		// biome-ignore lint/suspicious/noExplicitAny: テスト用のモック
+		const metaArgs = {} as any;
 		const result = meta(metaArgs);
 
 		expect(result).toEqual([
@@ -129,6 +130,7 @@ describe("Settings Meta Function", () => {
 
 describe("Settings Loader Function", () => {
 	let mockRequest: Request;
+	// biome-ignore lint/suspicious/noExplicitAny: テスト用のモック
 	let mockContext: any;
 
 	beforeEach(() => {
@@ -152,6 +154,7 @@ describe("Settings Loader Function", () => {
 		const result = await loader({
 			request: requestWithAuth,
 			context: mockContext,
+			// biome-ignore lint/suspicious/noExplicitAny: テスト用のモック
 		} as any);
 
 		expect(result).toBeDefined();
@@ -166,6 +169,7 @@ describe("Settings Loader Function", () => {
 		const result = await loader({
 			request: mockRequest,
 			context: mockContext,
+			// biome-ignore lint/suspicious/noExplicitAny: テスト用のモック
 		} as any);
 
 		expect(result).toBeInstanceOf(Response);
@@ -183,6 +187,7 @@ describe("Settings Loader Function", () => {
 		const result = await loader({
 			request: requestWithInvalidAuth,
 			context: mockContext,
+			// biome-ignore lint/suspicious/noExplicitAny: テスト用のモック
 		} as any);
 
 		expect(result).toBeInstanceOf(Response);
@@ -200,6 +205,7 @@ describe("Settings Loader Function", () => {
 		const result = await loader({
 			request: requestWithAuth,
 			context: mockContext,
+			// biome-ignore lint/suspicious/noExplicitAny: テスト用のモック
 		} as any);
 
 		expect(result).toBeDefined();
@@ -224,6 +230,7 @@ describe("Settings Loader Function", () => {
 		const result = await loader({
 			request: requestWithAuth,
 			context: mockContext,
+			// biome-ignore lint/suspicious/noExplicitAny: テスト用のモック
 		} as any);
 
 		expect(result).toBeInstanceOf(Response);

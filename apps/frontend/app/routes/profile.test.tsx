@@ -134,7 +134,8 @@ describe("Profile Page", () => {
 
 describe("Profile Meta Function", () => {
 	it("should return correct meta data", () => {
-		const metaArgs = {} as any; // Route.MetaArgs type
+		// biome-ignore lint/suspicious/noExplicitAny: テスト用のモック
+		const metaArgs = {} as any;
 		const result = meta(metaArgs);
 
 		expect(result).toEqual([
@@ -146,6 +147,7 @@ describe("Profile Meta Function", () => {
 
 describe("Profile Loader Function", () => {
 	let mockRequest: Request;
+	// biome-ignore lint/suspicious/noExplicitAny: テスト用のモック
 	let mockContext: any;
 
 	beforeEach(() => {
@@ -169,6 +171,7 @@ describe("Profile Loader Function", () => {
 		const result = await loader({
 			request: requestWithAuth,
 			context: mockContext,
+			// biome-ignore lint/suspicious/noExplicitAny: テスト用のモック
 		} as any);
 
 		expect(result).toBeDefined();
@@ -183,6 +186,7 @@ describe("Profile Loader Function", () => {
 		const result = await loader({
 			request: mockRequest,
 			context: mockContext,
+			// biome-ignore lint/suspicious/noExplicitAny: テスト用のモック
 		} as any);
 
 		expect(result).toBeInstanceOf(Response);
@@ -200,6 +204,7 @@ describe("Profile Loader Function", () => {
 		const result = await loader({
 			request: requestWithInvalidAuth,
 			context: mockContext,
+			// biome-ignore lint/suspicious/noExplicitAny: テスト用のモック
 		} as any);
 
 		expect(result).toBeInstanceOf(Response);
@@ -218,6 +223,7 @@ describe("Profile Loader Function", () => {
 		const result = await loader({
 			request: requestWithAuth,
 			context: mockContext,
+			// biome-ignore lint/suspicious/noExplicitAny: テスト用のモック
 		} as any);
 
 		expect(result).toBeInstanceOf(Response);
