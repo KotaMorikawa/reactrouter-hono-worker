@@ -82,17 +82,33 @@ npm install
 ```
 
 3. **開発環境の起動**
+
+#### Docker環境（推奨）
 ```bash
-# Docker環境起動（PostgreSQL, Redis）
-docker-compose up -d
+# Docker環境で全サービスを一括起動
+npm run docker:up
+
+# ログの確認
+npm run docker:logs
+
+# 環境の停止
+npm run docker:down
+```
+
+#### ローカル環境
+```bash
+# 外部サービス起動（PostgreSQL, Redis）
+docker-compose up -d postgres redis
 
 # 開発サーバー起動（全サービス並列起動）
 npm run dev
 ```
 
 4. **アクセス**
-- フロントエンド: http://localhost:3000
+- フロントエンド: http://localhost:5173
 - バックエンドAPI: http://localhost:8787
+- PostgreSQL: localhost:5432
+- Redis: localhost:6379
 
 ## 📝 開発コマンド
 
@@ -104,6 +120,14 @@ npm run test         # テスト実行（全パッケージ）
 npm run lint         # Linter実行（全パッケージ）
 npm run typecheck    # 型チェック（全パッケージ）
 npm run clean        # ビルド成果物クリーン
+```
+
+### Docker環境管理
+```bash
+npm run docker:up     # Docker環境起動（ビルド込み）
+npm run docker:down   # Docker環境停止
+npm run docker:logs   # 全サービスのログ表示
+npm run docker:clean  # Docker環境完全クリーン（ボリューム含む）
 ```
 
 ### Turborepoによる高度なコマンド実行
