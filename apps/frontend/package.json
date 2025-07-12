@@ -10,7 +10,10 @@
 		"deploy:staging": "wrangler deploy --env staging",
 		"typecheck": "react-router typegen && tsc",
 		"lint": "biome check app/ public/",
-		"test": "vitest run"
+		"test": "vitest run",
+		"test:e2e": "playwright test",
+		"test:e2e:headed": "playwright test --headed",
+		"test:e2e:ui": "playwright test --ui"
 	},
 	"dependencies": {
 		"@hookform/resolvers": "^5.1.1",
@@ -33,6 +36,7 @@
 	},
 	"devDependencies": {
 		"@cloudflare/workers-types": "^4.20250115.0",
+		"@playwright/test": "^1.54.1",
 		"@react-router/dev": "^7.5.3",
 		"@tailwindcss/vite": "^4.1.4",
 		"@testing-library/jest-dom": "^6.6.3",
