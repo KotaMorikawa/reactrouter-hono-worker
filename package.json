@@ -14,7 +14,11 @@
 		"test": "turbo test",
 		"typecheck": "turbo typecheck",
 		"clean": "turbo clean",
-		"format": "turbo format"
+		"format": "turbo format",
+		"docker:up": "docker-compose up --build",
+		"docker:down": "docker-compose down",
+		"docker:logs": "docker-compose logs -f",
+		"docker:clean": "docker-compose down -v --remove-orphans && docker system prune -f"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "^2.0.6",

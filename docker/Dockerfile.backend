@@ -1,0 +1,37 @@
+# ARM64対応のためnode:20-alpineの代わりにubuntuベースを使用
+FROM node:20
+
+# 作業ディレクトリの設定
+WORKDIR /app
+
+# システムの更新とCloudflare Workers用の依存関係をインストール
+RUN apt-get update && apt-get install -y \
+    python3 \
+    make \
+    g++ \
+    && rm -rf /var/lib/apt/lists/*
+
+# パッケージファイルをコピー
+COPY package*.json ./
+COPY apps/backend/package*.json ./apps/backend/
+COPY packages/shared/package*.json ./packages/shared/
+COPY packages/db/package*.json ./packages/db/
+
+# 依存関係のインストール
+RUN npm ci
+
+# ソースコードをコピー
+COPY . .
+
+# 共有パッケージのビルド
+RUN cd packages/shared && npm run build
+RUN cd packages/db && npm run build
+
+# バックエンドの作業ディレクトリに移動
+WORKDIR /app/apps/backend
+
+# ポート8787を公開
+EXPOSE 8787
+
+# Honoサーバーとして起動（wranglerの代わり）
+CMD ["npm", "run", "dev:node"]
