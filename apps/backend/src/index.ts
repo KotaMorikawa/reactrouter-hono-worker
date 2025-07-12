@@ -70,7 +70,9 @@ app.get("/", (c) => {
 
 // API routes
 import authRouter from "./routes/auth";
+import adminRouter from "./routes/admin";
 
 app.route("/auth", authRouter);
+app.route("/admin", adminRouter);
 
 export default app;
