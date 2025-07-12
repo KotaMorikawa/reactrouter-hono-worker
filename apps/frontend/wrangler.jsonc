@@ -1,0 +1,45 @@
+{
+	"name": "reactrouter-hono-frontend",
+	"compatibility_date": "2024-12-18",
+	"main": "./build/server/index.js",
+	"assets": { "directory": "./build/client" },
+	"build": {
+		"command": "npm run build"
+	},
+	"env": {
+		"preview": {
+			"name": "reactrouter-hono-frontend-preview",
+			"vars": {
+				"ENVIRONMENT": "preview"
+			}
+		},
+		"staging": {
+			"name": "reactrouter-hono-frontend-staging",
+			"vars": {
+				"ENVIRONMENT": "staging"
+			}
+		},
+		"production": {
+			"name": "reactrouter-hono-frontend-production",
+			"vars": {
+				"ENVIRONMENT": "production"
+			}
+		}
+	},
+	"vars": {
+		"ENVIRONMENT": "development"
+	},
+	"services": [
+		{
+			"binding": "API",
+			"service": "reactrouter-hono-backend"
+		}
+	],
+	"kv_namespaces": [
+		{
+			"binding": "SESSION_KV",
+			"id": "your-session-kv-namespace-id",
+			"preview_id": "your-preview-session-kv-namespace-id"
+		}
+	]
+}
