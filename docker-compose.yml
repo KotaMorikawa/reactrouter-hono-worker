@@ -9,13 +9,19 @@ services:
     environment:
       - NODE_ENV=development
       - ENVIRONMENT=development
+      - JWT_SECRET=dev-jwt-secret-key-docker
+      - JWT_REFRESH_SECRET=dev-refresh-secret-key-docker
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/auth_database
     volumes:
       - ./apps/backend:/app/apps/backend
       - ./packages:/app/packages
       - /app/node_modules
       - /app/apps/backend/node_modules
     working_dir: /app/apps/backend
-    command: npm run dev
+    command: npm run dev:node
+    depends_on:
+      - postgres
+      - redis
     networks:
       - app-network
 

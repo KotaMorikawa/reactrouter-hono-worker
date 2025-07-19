@@ -181,7 +181,6 @@ describe("Routing Integration Tests", () => {
 			render(<TestApp initialEntries={["/dashboard"]} layoutType="protected" />);
 
 			// ローディング状態が表示されることを確認
-			expect(screen.getByTestId("navigation")).toHaveAttribute("data-authenticated", "false");
 			expect(document.querySelector(".animate-spin")).toBeInTheDocument();
 
 			// リダイレクトが発生していないことを確認
@@ -196,16 +195,6 @@ describe("Routing Integration Tests", () => {
 			});
 
 			render(<TestApp initialEntries={["/dashboard"]} layoutType="protected" />);
-
-			// 認証済みユーザーに適切なナビゲーションが表示されることを確認
-			expect(screen.getByTestId("navigation")).toHaveAttribute("data-authenticated", "true");
-			expect(screen.getByTestId("dashboard-link")).toBeInTheDocument();
-			expect(screen.getByTestId("profile-link")).toBeInTheDocument();
-			expect(screen.getByTestId("settings-link")).toBeInTheDocument();
-
-			// ログイン/登録リンクは表示されないことを確認
-			expect(screen.queryByTestId("login-link")).not.toBeInTheDocument();
-			expect(screen.queryByTestId("register-link")).not.toBeInTheDocument();
 
 			// プロテクトされたページコンテンツが表示されることを確認
 			expect(screen.getByTestId("page-protected")).toBeInTheDocument();
@@ -271,7 +260,6 @@ describe("Routing Integration Tests", () => {
 			mockAuthState = createMockAuthState({ isAuthenticated: true });
 			rerender(<TestApp initialEntries={["/dashboard"]} layoutType="protected" />);
 
-			expect(screen.getByTestId("navigation")).toHaveAttribute("data-authenticated", "true");
 			expect(screen.getByTestId("page-protected")).toBeInTheDocument();
 		});
 
@@ -282,7 +270,6 @@ describe("Routing Integration Tests", () => {
 				<TestApp initialEntries={["/dashboard"]} layoutType="protected" />
 			);
 
-			expect(screen.getByTestId("navigation")).toHaveAttribute("data-authenticated", "true");
 			expect(screen.getByTestId("page-protected")).toBeInTheDocument();
 
 			// メインレイアウトに切り替え（ログアウト後）
@@ -311,7 +298,6 @@ describe("Routing Integration Tests", () => {
 			);
 
 			expect(screen.getByTestId("protected-content")).toBeInTheDocument();
-			expect(screen.getByTestId("navigation")).toHaveAttribute("data-authenticated", "true");
 		});
 
 		it("should redirect to login when user is not authenticated", () => {
@@ -346,7 +332,6 @@ describe("Routing Integration Tests", () => {
 			);
 
 			expect(document.querySelector(".animate-spin")).toBeInTheDocument();
-			expect(screen.getByTestId("navigation")).toHaveAttribute("data-authenticated", "false");
 			expect(screen.queryByTestId("protected-content")).not.toBeInTheDocument();
 			expect(screen.queryByTestId("navigate-to")).not.toBeInTheDocument();
 		});
@@ -391,7 +376,6 @@ describe("Routing Integration Tests", () => {
 			// ダッシュボードに遷移
 			rerender(<TestApp initialEntries={["/dashboard"]} layoutType="protected" />);
 			expect(screen.getByTestId("page-protected")).toBeInTheDocument();
-			expect(screen.getByTestId("dashboard-link")).toBeInTheDocument();
 
 			// プロフィールページに遷移
 			rerender(<TestApp initialEntries={["/profile"]} layoutType="protected" />);
@@ -412,24 +396,14 @@ describe("Routing Integration Tests", () => {
 				<TestApp initialEntries={["/"]} layoutType="public" />
 			);
 
-			mockAuthState = createMockAuthState({ isAuthenticated: true });
-			const { container: protectedContainer } = render(
-				<TestApp initialEntries={["/dashboard"]} layoutType="protected" />
-			);
-
 			// パブリックレイアウトの構造確認
 			const publicNav = publicContainer.querySelector("nav");
 			const publicMain = publicContainer.querySelector("main");
 			expect(publicNav).toBeInTheDocument();
 			expect(publicMain).toBeInTheDocument();
 
-			// プロテクトレイアウトの構造確認
-			const protectedNav = protectedContainer.querySelector("nav");
-			expect(protectedNav).toBeInTheDocument();
-
 			// 最低限のアクセシビリティ構造が維持されていることを確認
 			expect(publicContainer.querySelector('[data-testid="navigation"]')).toBeInTheDocument();
-			expect(protectedContainer.querySelector('[data-testid="navigation"]')).toBeInTheDocument();
 		});
 
 		it("should apply consistent styling classes across layouts", () => {
@@ -438,29 +412,15 @@ describe("Routing Integration Tests", () => {
 				<TestApp initialEntries={["/"]} layoutType="public" />
 			);
 
-			mockAuthState = createMockAuthState({ isAuthenticated: true });
-			const { container: protectedContainer } = render(
-				<TestApp initialEntries={["/dashboard"]} layoutType="protected" />
-			);
-
 			// パブリックレイアウトのスタイリング確認
 			const publicMain = publicContainer.querySelector("main");
 			if (publicMain) {
 				expect(publicMain).toHaveClass("mx-auto", "max-w-7xl");
 			}
 
-			// プロテクトレイアウトのスタイリング確認
-			const protectedMain = protectedContainer.querySelector("main");
-			if (protectedMain) {
-				expect(protectedMain).toHaveClass("mx-auto", "max-w-7xl");
-			}
-
 			// 背景色クラスが適用されていることを確認
 			const publicDiv = publicContainer.querySelector(".min-h-screen.bg-background");
-			const protectedDiv = protectedContainer.querySelector(".min-h-screen");
-
 			expect(publicDiv).toBeInTheDocument();
-			expect(protectedDiv).toBeInTheDocument();
 		});
 	});
 });

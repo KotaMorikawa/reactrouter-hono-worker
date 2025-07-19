@@ -20,6 +20,16 @@ COPY packages/db/package*.json ./packages/db/
 # 依存関係のインストール（ARM64対応の依存関係を含む）
 RUN npm ci
 
+# ARM64対応のバイナリを正しくインストール
+RUN rm -rf node_modules/@rollup && npm install @rollup/rollup-linux-arm64-gnu --force
+
+# LightningCSS用に環境変数設定してから再インストール
+ENV npm_config_target_arch=arm64
+RUN rm -rf node_modules/lightningcss && npm install lightningcss --force
+
+# 必要なバイナリファイルが存在することを確認
+RUN find node_modules/lightningcss -name "*.node" -type f | head -5 || echo "No .node files found"
+
 # ソースコードをコピー
 COPY . .
 

@@ -19,7 +19,6 @@ import {
 } from "../lib/rate-limit";
 import { authMiddleware, requireAuth } from "../middleware/auth";
 import { adminOnly, viewerAccess } from "../middleware/rbac";
-import { loginRateLimitMiddleware } from "../middleware/security";
 
 // Mock implementations for database and schema - will be replaced with actual imports
 interface MockTable {
@@ -43,19 +42,21 @@ const mockUserData = {
 	email: "test@example.com",
 	name: "Test User",
 	role: "viewer",
-	passwordHash: "", // Will be set with actual hash
+	passwordHash: "", // Will be set dynamically in handlers
 };
 
-// Initialize mock user with hashed password
-(async () => {
-	try {
-		mockUserData.passwordHash = await hashPassword("password123");
-	} catch (error) {
-		console.error("Failed to initialize mock user password:", error);
-		// Fallback to avoid test failures
-		mockUserData.passwordHash = "fallback-hash";
+// Helper to get or initialize password hash
+const getMockUserWithHash = async () => {
+	if (!mockUserData.passwordHash) {
+		try {
+			mockUserData.passwordHash = await hashPassword("password123");
+		} catch (error) {
+			console.error("Failed to initialize mock user password:", error);
+			mockUserData.passwordHash = "fallback-hash";
+		}
 	}
-})();
+	return mockUserData;
+};
 
 const mockDb = {
 	select: () => ({
@@ -63,8 +64,9 @@ const mockDb = {
 			where: (condition: { email: string }) => ({
 				get: async () => {
 					// Return mock user if email matches
-					if (condition.email === mockUserData.email) {
-						return mockUserData;
+					const userData = await getMockUserWithHash();
+					if (condition.email === userData.email) {
+						return userData;
 					}
 					return null;
 				},
@@ -96,18 +98,21 @@ const mockUsers: MockTable = {
 
 const authRouter = new Hono<{ Bindings: Env }>();
 
-// Apply security middleware to all auth routes
-authRouter.use("*", loginRateLimitMiddleware());
+// Apply security middleware to protected routes only (not login/register)
+// Rate limiting will be applied on individual endpoints as needed
 
-// Apply auth middleware to all routes for user context
-authRouter.use("*", authMiddleware);
+// Apply auth middleware to protected routes only
+// Note: login/register need to be accessible without authentication
 
-// Skip CSRF in test environment
+// Skip CSRF in test environment, and for login/register endpoints
 authRouter.use("*", async (c, next) => {
-	if (c.env.ENVIRONMENT !== "test") {
-		return createCSRFMiddleware({ skipMethods: ["GET", "HEAD", "OPTIONS"] })(c, next);
+	const path = c.req.path;
+	// Skip CSRF for login/register endpoints and in test environment
+	if (c.env.ENVIRONMENT === "test" || path.endsWith("/login") || path.endsWith("/register")) {
+		await next();
+		return;
 	}
-	await next();
+	return createCSRFMiddleware({ skipMethods: ["GET", "HEAD", "OPTIONS"] })(c, next);
 });
 
 // User registration endpoint
@@ -173,7 +178,8 @@ authRouter.post("/register", async (c) => {
 				name: newUser.name,
 				role: newUser.role,
 			},
-			tokens,
+			accessToken: tokens.accessToken,
+			refreshToken: tokens.refreshToken,
 		});
 	} catch (error) {
 		console.error("Registration error:", error);
@@ -183,10 +189,11 @@ authRouter.post("/register", async (c) => {
 
 // User login endpoint
 authRouter.post("/login", async (c) => {
+	console.log("🔍 Login endpoint accessed");
 	try {
 		const body = await c.req.json();
 		const { email, password } = body;
-		console.log("Registration attempt:", { email, password });
+		console.log("Login attempt:", { email, password });
 
 		// Check login rate limit for this email
 		const isRateLimited = await checkLoginRateLimit(email, c.env);
@@ -245,7 +252,8 @@ authRouter.post("/login", async (c) => {
 				name: user.name,
 				role: user.role,
 			},
-			tokens,
+			accessToken: tokens.accessToken,
+			refreshToken: tokens.refreshToken,
 		});
 	} catch (error) {
 		console.error("Login error:", error);

@@ -1,21 +1,21 @@
 import { AlertCircle } from "lucide-react";
-import { useEffect } from "react";
-import { Link, Navigate } from "react-router";
+import { useEffect, useState } from "react";
+import { Link, Navigate, useNavigate } from "react-router";
 import { Alert, AlertDescription } from "~/components/ui/alert";
 import { Button } from "~/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "~/components/ui/card";
-import {
-	Form,
-	FormControl,
-	FormField,
-	FormItem,
-	FormLabel,
-	FormMessage,
-} from "~/components/ui/form";
-import { Input } from "~/components/ui/input";
+// import {
+// 	Form,
+// 	FormControl,
+// 	FormField,
+// 	FormItem,
+// 	FormLabel,
+// 	FormMessage,
+// } from "~/components/ui/form";
+// import { Input } from "~/components/ui/input";
 import { Navigation } from "../components/navigation";
 import { useAuth } from "../contexts/auth-context";
-import { useLoginForm } from "../hooks/use-auth-form";
+// import { useLoginForm } from "../hooks/use-auth-form";
 import type { Route } from "./+types/login";
 
 export function meta(_: Route.MetaArgs) {
@@ -27,10 +27,23 @@ export function meta(_: Route.MetaArgs) {
 
 export default function Login() {
 	const { login, isAuthenticated, isLoading, error, clearError } = useAuth();
-	const form = useLoginForm();
+	// const form = useLoginForm();
+	const navigate = useNavigate();
 
-	const onSubmit = (data: { email: string; password: string }) => {
-		login(data.email, data.password);
+	// 一時的にシンプルなフォームに置き換え
+	const [email, setEmail] = useState("");
+	const [password, setPassword] = useState("");
+
+	const onSubmit = async (e: React.FormEvent) => {
+		e.preventDefault();
+		try {
+			await login(email, password);
+			// ログイン成功後にダッシュボードにリダイレクト
+			navigate("/dashboard", { replace: true });
+		} catch (err) {
+			// エラーハンドリングはauth-contextで行われる
+			console.error("Login error:", err);
+		}
 	};
 
 	// エラーが変更された際にクリアする
@@ -67,67 +80,67 @@ export default function Login() {
 							</Alert>
 						)}
 
-						<Form {...form}>
-							<form
-								onSubmit={form.handleSubmit(onSubmit)}
-								className="space-y-4"
-								data-testid="login-form"
-							>
-								<FormField
-									control={form.control}
-									name="email"
-									render={({ field }) => (
-										<FormItem>
-											<FormLabel>メールアドレス</FormLabel>
-											<FormControl>
-												<Input
-													type="email"
-													placeholder="メールアドレスを入力"
-													autoComplete="email"
-													{...field}
-												/>
-											</FormControl>
-											<FormMessage />
-										</FormItem>
-									)}
-								/>
-
-								<FormField
-									control={form.control}
-									name="password"
-									render={({ field }) => (
-										<FormItem>
-											<FormLabel>パスワード</FormLabel>
-											<FormControl>
-												<Input
-													type="password"
-													placeholder="パスワードを入力"
-													autoComplete="current-password"
-													{...field}
-												/>
-											</FormControl>
-											<FormMessage />
-										</FormItem>
-									)}
-								/>
-
-								<Button
-									type="submit"
-									className="w-full"
-									disabled={form.formState.isSubmitting || isLoading}
-									data-testid="login-submit-button"
+						<form onSubmit={onSubmit} className="space-y-4" data-testid="login-form">
+							<div>
+								<label
+									htmlFor="email"
+									className="block font-medium text-gray-900 text-sm leading-6"
 								>
-									{form.formState.isSubmitting || isLoading ? "ログイン中..." : "ログイン"}
-								</Button>
-
-								<div className="text-center text-sm">
-									アカウントをお持ちでない方は{" "}
-									<Link to="/register" className="font-medium text-primary hover:underline">
-										こちら
-									</Link>
+									メールアドレス
+								</label>
+								<div className="mt-2">
+									<input
+										id="email"
+										name="email"
+										type="email"
+										autoComplete="email"
+										required
+										value={email}
+										onChange={(e) => setEmail(e.target.value)}
+										className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-gray-300 ring-inset placeholder:text-gray-400 focus:ring-2 focus:ring-indigo-600 focus:ring-inset sm:text-sm sm:leading-6"
+										placeholder="メールアドレスを入力"
+									/>
 								</div>
-							</form>
-						</Form>
+							</div>
+
+							<div>
+								<label
+									htmlFor="password"
+									className="block font-medium text-gray-900 text-sm leading-6"
+								>
+									パスワード
+								</label>
+								<div className="mt-2">
+									<input
+										id="password"
+										name="password"
+										type="password"
+										autoComplete="current-password"
+										required
+										value={password}
+										onChange={(e) => setPassword(e.target.value)}
+										className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-gray-300 ring-inset placeholder:text-gray-400 focus:ring-2 focus:ring-indigo-600 focus:ring-inset sm:text-sm sm:leading-6"
+										placeholder="パスワードを入力"
+									/>
+								</div>
+							</div>
+
+							<Button
+								type="submit"
+								className="w-full"
+								disabled={isLoading}
+								data-testid="login-submit-button"
+							>
+								{isLoading ? "ログイン中..." : "ログイン"}
+							</Button>
+
+							<div className="text-center text-sm">
+								アカウントをお持ちでない方は{" "}
+								<Link to="/register" className="font-medium text-primary hover:underline">
+									こちら
+								</Link>
+							</div>
+						</form>
 					</CardContent>
 				</Card>
 			</div>

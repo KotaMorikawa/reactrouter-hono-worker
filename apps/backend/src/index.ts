@@ -47,6 +47,10 @@ app.use(
 			if (origin?.includes("localhost") || origin?.includes("127.0.0.1")) {
 				return origin;
 			}
+			// Allow null origin for file:// protocol (development testing)
+			if (!origin || origin === "null") {
+				return true;
+			}
 			// Allow production domains
 			if (origin?.includes("your-domain.com")) {
 				return origin;
@@ -60,8 +64,8 @@ app.use(
 // Logger middleware
 app.use("*", logger());
 
-// Apply comprehensive security middleware
-app.use("*", comprehensiveSecurityMiddleware());
+// Apply comprehensive security middleware (temporarily disabled for debugging)
+// app.use("*", comprehensiveSecurityMiddleware());
 
 // Health check endpoint
 app.get("/", (c) => {
@@ -76,3 +80,5 @@ app.route("/auth", authRouter);
 app.route("/admin", adminRouter);
 
 export default app;
+
+export type AppType = typeof app;

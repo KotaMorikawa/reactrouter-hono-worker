@@ -1,6 +1,6 @@
 import { Navigate } from "react-router";
 import { useAuth } from "../contexts/auth-context";
-import { Navigation } from "./navigation";
+import { LoadingSpinner } from "./ui/loading-spinner";
 
 interface ProtectedRouteProps {
 	children: React.ReactNode;
@@ -11,11 +11,8 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
 
 	if (isLoading) {
 		return (
-			<div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-				<Navigation isAuthenticated={false} />
-				<div className="flex min-h-screen items-center justify-center">
-					<div className="h-12 w-12 animate-spin rounded-full border-blue-600 border-b-2"></div>
-				</div>
+			<div className="flex min-h-screen items-center justify-center">
+				<LoadingSpinner size="lg" />
 			</div>
 		);
 	}
@@ -24,10 +21,5 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
 		return <Navigate to="/login" replace />;
 	}
 
-	return (
-		<div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-			<Navigation isAuthenticated={true} />
-			{children}
-		</div>
-	);
+	return <>{children}</>;
 }

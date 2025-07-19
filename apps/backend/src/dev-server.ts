@@ -19,11 +19,11 @@ const mockEnv = {
     delete: async (key: string) => undefined,
   },
   
-  // Environment variables
-  ENVIRONMENT: 'development',
-  JWT_SECRET: 'dev-jwt-secret-key',
-  JWT_REFRESH_SECRET: 'dev-refresh-secret-key',
-  DATABASE_URL: 'postgresql://postgres:postgres@postgres:5432/auth_database',
+  // Environment variables (use Docker env vars if available)
+  ENVIRONMENT: process.env.ENVIRONMENT || 'development',
+  JWT_SECRET: process.env.JWT_SECRET || 'dev-jwt-secret-key',
+  JWT_REFRESH_SECRET: process.env.JWT_REFRESH_SECRET || 'dev-refresh-secret-key',
+  DATABASE_URL: process.env.DATABASE_URL || 'postgresql://postgres:postgres@localhost:5432/auth_database',
 };
 
 const port = 8787;

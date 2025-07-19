@@ -1,15 +1,17 @@
-import type { Hono } from "hono";
 import { hc } from "hono/client";
+import type { AppType } from "../../../backend/src/index";
 
-// Note: Type will be available when @repo/shared is properly built
-// import type { AppType } from "@repo/shared";
-type AppType = Hono; // Temporary fallback
+interface Env {
+	API?: Fetcher;
+	API_URL?: string;
+	ENVIRONMENT?: string;
+}
 
 /**
  * Create API client for frontend-backend communication
  * Uses Service Bindings in production, HTTP in development
  */
-export function createApiClient(env?: Env): ReturnType<typeof hc<AppType>> {
+export function createApiClient(env?: Env) {
 	// Production: Use Service Binding for high-performance internal communication
 	if (env?.API) {
 		return hc<AppType>("/", {

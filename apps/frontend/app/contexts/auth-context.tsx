@@ -1,4 +1,5 @@
 import type { BaseUser } from "@repo/shared";
+import type { hc } from "hono/client";
 import {
 	createContext,
 	type ReactNode,
@@ -7,6 +8,8 @@ import {
 	useEffect,
 	useReducer,
 } from "react";
+import { createApiClient } from "../lib/api";
+import type { AppType } from "../../../backend/src/index";
 
 interface AuthState {
 	user: BaseUser | null;
@@ -25,7 +28,7 @@ type AuthAction =
 const initialState: AuthState = {
 	user: null,
 	isAuthenticated: false,
-	isLoading: true,
+	isLoading: false,
 	error: null,
 };
 
@@ -92,6 +95,9 @@ interface AuthProviderProps {
 export function AuthProvider({ children }: AuthProviderProps) {
 	const [state, dispatch] = useReducer(authReducer, initialState);
 
+	// 型安全なAPIクライアントを作成
+	const typedApiClient = createApiClient() as ReturnType<typeof hc<AppType>>;
+
 	// WebKit対応のlocalStorage安全アクセス関数
 	const safeLocalStorageSet = useCallback((key: string, value: string): boolean => {
 		try {
@@ -128,30 +134,25 @@ export function AuthProvider({ children }: AuthProviderProps) {
 		return false;
 	}, []);
 
-	// TODO: 実際のAPI統合時に実装
 	const login = async (email: string, password: string): Promise<void> => {
 		dispatch({ type: "AUTH_START" });
 
 		try {
-			// モック実装 - 実際のAPI呼び出しに置き換える
-			console.log("Login attempt:", { email, password });
+			const response = await typedApiClient.auth.login.$post({
+				json: { email, password },
+			});
 
-			// 成功をシミュレート
-			const mockUser: BaseUser = {
-				id: "mock-user-id",
-				email,
-				name: "Test User",
-				role: "viewer",
-				createdAt: new Date(),
-				updatedAt: new Date(),
-				emailVerified: true,
-				lastLogin: new Date(),
-			};
+			if (!response.ok) {
+				const errorData = await response.json();
+				throw new Error(errorData.error || "ログインに失敗しました");
+			}
+
+			const { user, accessToken } = await response.json();
 
 			// JWTトークンをlocalStorageに保存（WebKit対応）
-			safeLocalStorageSet("authToken", "mock-jwt-token");
+			safeLocalStorageSet("authToken", accessToken);
 
-			dispatch({ type: "AUTH_SUCCESS", payload: { user: mockUser } });
+			dispatch({ type: "AUTH_SUCCESS", payload: { user } });
 		} catch (error) {
 			const errorMessage = error instanceof Error ? error.message : "ログインに失敗しました";
 			dispatch({ type: "AUTH_FAILURE", payload: { error: errorMessage } });
@@ -167,25 +168,21 @@ export function AuthProvider({ children }: AuthProviderProps) {
 		dispatch({ type: "AUTH_START" });
 
 		try {
-			// モック実装 - 実際のAPI呼び出しに置き換える
-			console.log("Register attempt:", { email, name, password, confirmPassword });
+			const response = await typedApiClient.auth.register.$post({
+				json: { email, name, password, confirmPassword },
+			});
 
-			// 成功をシミュレート
-			const mockUser: BaseUser = {
-				id: "mock-user-id",
-				email,
-				name,
-				role: "viewer",
-				createdAt: new Date(),
-				updatedAt: new Date(),
-				emailVerified: false,
-				lastLogin: undefined,
-			};
+			if (!response.ok) {
+				const errorData = await response.json();
+				throw new Error(errorData.error || "ユーザー登録に失敗しました");
+			}
+
+			const { user, accessToken } = await response.json();
 
 			// JWTトークンをlocalStorageに保存（WebKit対応）
-			safeLocalStorageSet("authToken", "mock-jwt-token");
+			safeLocalStorageSet("authToken", accessToken);
 
-			dispatch({ type: "AUTH_SUCCESS", payload: { user: mockUser } });
+			dispatch({ type: "AUTH_SUCCESS", payload: { user } });
 		} catch (error) {
 			const errorMessage = error instanceof Error ? error.message : "ユーザー登録に失敗しました";
 			dispatch({ type: "AUTH_FAILURE", payload: { error: errorMessage } });
@@ -194,7 +191,19 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
 	const logout = async (): Promise<void> => {
 		try {
-			// TODO: APIで無効化
+			// サーバーサイドでトークンを無効化
+			const token = safeLocalStorageGet("authToken");
+			if (token) {
+				await typedApiClient.auth.logout.$post(
+					{},
+					{
+						headers: {
+							Authorization: `Bearer ${token}`,
+						},
+					}
+				);
+			}
+
 			safeLocalStorageRemove("authToken");
 			dispatch({ type: "AUTH_LOGOUT" });
 
@@ -221,29 +230,44 @@ export function AuthProvider({ children }: AuthProviderProps) {
 			try {
 				const token = safeLocalStorageGet("authToken");
 				if (token) {
-					// TODO: トークンの検証とユーザー情報の取得
-					const mockUser: BaseUser = {
-						id: "mock-user-id",
-						email: "user@example.com",
-						name: "Test User",
-						role: "viewer",
-						createdAt: new Date(),
-						updatedAt: new Date(),
-						emailVerified: true,
-						lastLogin: new Date(),
-					};
-					dispatch({ type: "AUTH_SUCCESS", payload: { user: mockUser } });
+					dispatch({ type: "AUTH_START" });
+
+					// タイムアウト付きでトークンの検証とユーザー情報の取得
+					const controller = new AbortController();
+					const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+					const response = await typedApiClient.auth.me.$get(
+						{},
+						{
+							headers: {
+								Authorization: `Bearer ${token}`,
+							},
+							signal: controller.signal,
+						}
+					);
+
+					clearTimeout(timeoutId);
+
+					if (response.ok) {
+						const { user } = await response.json();
+						dispatch({ type: "AUTH_SUCCESS", payload: { user } });
+					} else {
+						// トークンが無効な場合はログアウト
+						safeLocalStorageRemove("authToken");
+						dispatch({ type: "AUTH_LOGOUT" });
+					}
 				} else {
 					dispatch({ type: "AUTH_LOGOUT" });
 				}
-			} catch (_error) {
+			} catch (error) {
+				console.warn("Auth check failed:", error);
 				safeLocalStorageRemove("authToken");
 				dispatch({ type: "AUTH_LOGOUT" });
 			}
 		};
 
 		checkAuthStatus();
-	}, [safeLocalStorageGet, safeLocalStorageRemove]);
+	}, []); // 依存配列を空にして初回のみ実行
 
 	const value: AuthContextType = {
 		...state,

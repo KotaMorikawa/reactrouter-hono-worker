@@ -1,6 +1,5 @@
 /// <reference types="vitest" />
 import { reactRouter } from "@react-router/dev/vite";
-import tailwindcss from "@tailwindcss/vite";
 import { defineConfig } from "vite";
 import tsconfigPaths from "vite-tsconfig-paths";
 
@@ -9,11 +8,13 @@ export default defineConfig(() => {
 
 	return {
 		plugins: [
-			tailwindcss(),
 			// React Routerプラグインはテスト環境では無効化
 			!isTest && reactRouter(),
 			tsconfigPaths(),
 		].filter(Boolean),
+		css: {
+			postcss: "./postcss.config.js",
+		},
 		server: {
 			port: 5173,
 			host: true, // Allow external connections for development

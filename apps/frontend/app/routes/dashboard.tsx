@@ -1,4 +1,4 @@
-import { ProtectedRoute } from "~/components/protected-route";
+import { AuthenticatedLayout } from "~/components/layout/authenticated-layout";
 import type { Route } from "./+types/dashboard";
 
 export function meta(_: Route.MetaArgs) {
@@ -10,7 +10,7 @@ export function meta(_: Route.MetaArgs) {
 
 export default function Dashboard() {
 	return (
-		<ProtectedRoute>
+		<AuthenticatedLayout>
 			<div className="py-6 sm:px-6 lg:px-8">
 				<div className="px-4 py-6 sm:px-0">
 					<div className="rounded-lg bg-white p-8 shadow dark:bg-gray-800">
@@ -55,6 +55,6 @@ export default function Dashboard() {
 					</div>
 				</div>
 			</div>
-		</ProtectedRoute>
+		</AuthenticatedLayout>
 	);
 }
